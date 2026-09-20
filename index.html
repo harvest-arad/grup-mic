@@ -153,6 +153,9 @@ function vPrez(){
       ${it.data > S.azi ? ' <span class="mut">· încă n-a avut loc</span>' : ''}
     </div>
     <button class="b" data-a="next">▶</button></div>`;
+  if (it.data > S.azi) {
+    return h + `<div class="card">Întâlnirea <b>n-a avut loc încă</b>. Prezența se poate bifa din ziua întâlnirii${it.gazda ? ', la ' + esc(it.gazda) : ''}.</div>`;
+  }
   if (!numarata) {
     return h + `<div class="card">Săptămână <b>${esc(it.tip)}</b> — nu se face prezența și nu intră în procent.
       <div class="acts"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Schimbă în Normală</button></div></div>`;
@@ -182,7 +185,7 @@ function marcheaza(data, changes){
   render();
   clearTimeout(flushT); flushT = setTimeout(flush, 700);
 }
-let coada = Promise.resolve();
+let coada = Promise.resolve(); const incercari = {};
 function flush(){
   clearTimeout(flushT);
   Object.keys(pending).forEach(d => {
@@ -191,9 +194,12 @@ function flush(){
     pending[d] = {};
     coada = coada.then(() => call('api_prezenta', d, ch)).then(st => {
       if (pending[d] && !Object.keys(pending[d]).length) delete pending[d];
+      delete incercari[d];
       if (st) aplica(st); else render();
       toast('Salvat ✓');
     }).catch(() => {
+      incercari[d] = (incercari[d] || 0) + 1;
+      if (incercari[d] > 3) { delete incercari[d]; toast('Nu s-a putut salva. Reîncarc datele.', 4000); load(); return; }
       pending[d] = Object.assign({}, ch, pending[d] || {});
       toast('Nu s-a salvat — reîncerc', 3000);
       clearTimeout(flushT); flushT = setTimeout(flush, 5000);
@@ -295,6 +301,7 @@ function bind(){
 }
 function act(a, el){
   const d = el.dataset.d, it = S.intalniri[IDX];
+  if (['p','fam','toti'].indexOf(a) >= 0 && it && it.data > S.azi) { toast('Întâlnirea n-a avut loc încă', 2500); return; }
   if (a === 'prev') { if (IDX > 0) IDX--; render(); }
   else if (a === 'next') { if (IDX < S.intalniri.length - 1) IDX++; render(); }
   else if (a === 'p') { const p = el.dataset.p; const ch = {}; ch[p] = !esteMarcat(it.data, p); marcheaza(it.data, ch); }
