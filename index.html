@@ -13,6 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grup mic">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--soft:#F1F2F4;--bg:#F4F5F7;--card:#fff;--ink:#16171C;--mut:#70727D;--line:#E3E4E8;--acc:#2A2C32;--gal:#F5BA00;--ok:#1F9D55;--okbg:#E7F6ED;--warn:#9A6B00;--warnbg:#FFF8E1;--bad:#C8372D;--badbg:#FDECEA}
@@ -21,7 +22,7 @@
 body{margin:0;font-family:"Open Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
 header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 14px 0;border-bottom:4px solid var(--gal)}
 header h1{font-family:Montserrat,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700;display:flex;align-items:center;gap:10px}
-header h1 img{height:30px}
+header h1 img{height:34px}
 h3,.host,.datebar .d b{font-family:Montserrat,sans-serif;font-weight:700}
 header h1 small{opacity:.75;font-weight:400}
 nav{display:flex;gap:2px}
@@ -67,7 +68,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 </head>
 <body>
 <header>
-  <h1><img src="logo.svg" alt="Harvest Arad" onerror="this.style.display='none'"><span><span id="titlu">Grup mic</span> <small id="who"></small></span></h1>
+  <h1><img src="logo-mark.svg" alt="Harvest Arad" onerror="this.style.display='none'"><span><span id="titlu">Grup mic</span> <small id="who"></small></span></h1>
   <nav>
     <button data-v="prez" class="on">Prezență</button>
     <button data-v="gazd">Găzduire</button>
@@ -83,7 +84,14 @@ const KEY = (function(){
   const q = new URLSearchParams(location.search).get('k');
   try { if (q) localStorage.setItem('grupMicKey', q); return q || localStorage.getItem('grupMicKey') || ''; } catch (e) { return q || ''; }
 })();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const aveaSW = !!navigator.serviceWorker.controller;
+  let reincarcat = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!aveaSW || reincarcat) return; reincarcat = true; location.reload();   // versiune nouă publicată
+  });
+}
 let S = null, VIEW = 'prez', IDX = null, ARATA_TRECUTE = false;
 const pending = {}; let flushT = null;
 
@@ -97,14 +105,19 @@ function dScurt(s){const p=s.split('-');return p[2]+'.'+p[1];}
 function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms||1800);}
 
 function call(fn, ...args){
-  return fetch(API, { method: 'POST', body: JSON.stringify({ k: KEY, fn: fn, args: args }) })
+  return fetch(API, { method: 'POST', keepalive: true, body: JSON.stringify({ k: KEY, fn: fn, args: args }) })
     .then(r => r.json())
     .then(j => { if (!j.ok) throw new Error(j.error); return j.data; })
     .catch(e => { toast('Eroare: ' + (e && e.message || e), 4000); throw e; });
 }
 function reaplica(){ Object.keys(pending).forEach(d => { S.prezenta[d] = Object.assign(S.prezenta[d] || {}, pending[d]); }); }
-function load(){ return call('api_stare').then(st => { S = st; reaplica(); $('#who').textContent = '· ' + S.user; if (S.titlu) { $('#titlu').textContent = S.titlu; document.title = S.titlu; } if (IDX === null) IDX = idxImplicit(); render(); }); }
-function aplica(st){ S = st; reaplica(); render(); }
+const CKEY = 'grupMicStare';
+function pastreaza(){ try { localStorage.setItem(CKEY, JSON.stringify(S)); } catch (e) {} }
+function dinCache(){ try { const r = localStorage.getItem(CKEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function arata(st){ S = st; reaplica(); $('#who').textContent = '· ' + S.user; if (S.titlu) { $('#titlu').textContent = S.titlu; document.title = S.titlu; } if (IDX === null) IDX = idxImplicit(); render(); }
+function load(){ return call('api_stare').then(st => { arata(st); pastreaza(); }); }
+function aplica(st){ S = st; reaplica(); pastreaza(); render(); }
+function porneste(){ const c = dinCache(); if (c) { try { arata(c); } catch (e) {} } load(); }
 
 function idxImplicit(){
   const I = S.intalniri; let k = -1;
@@ -142,8 +155,7 @@ function vPrez(){
     <button class="b" data-a="next">▶</button></div>`;
   if (!numarata) {
     return h + `<div class="card">Săptămână <b>${esc(it.tip)}</b> — nu se face prezența și nu intră în procent.
-      <div class="acts"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Schimbă în Normală</button>
-      <button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Mixtă">Schimbă în Mixtă</button></div></div>`;
+      <div class="acts"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Schimbă în Normală</button></div></div>`;
   }
   h += `<div class="row" style="margin-bottom:10px"><span class="mut sp">${it.prezenta_facuta==='1'?'Prezență făcută · atinge ca să modifici':'Atinge numele celor prezenți'}</span>
         <button class="b p" data-a="toti">Toți prezenți</button></div>`;
@@ -160,7 +172,6 @@ function vPrez(){
       }).join('')}</div></div>`;
   });
   if (it.tip === 'Întâlnirea bărbaților') h += `<div class="note">Bărbații: ${esc(it.loc_barbati || 'Biserica')} · Femeile: ${esc(it.loc_femei || '(nestabilit)')} — se numără pentru toți; întreabă soțiile cine a fost prezentă.</div>`;
-  if (it.tip === 'Mixtă') h += `<div class="note">Săptămână mixtă: se numără pentru toți — întreabă soțiile cine a fost prezentă.</div>`;
   return h;
 }
 function marcheaza(data, changes){
@@ -175,11 +186,27 @@ let coada = Promise.resolve();
 function flush(){
   clearTimeout(flushT);
   Object.keys(pending).forEach(d => {
-    const ch = pending[d]; delete pending[d];
-    coada = coada.then(() => call('api_prezenta', d, ch)).then(() => toast('Salvat ✓')).catch(() => load());
+    const ch = pending[d];
+    if (!ch || !Object.keys(ch).length) { delete pending[d]; return; }
+    pending[d] = {};
+    coada = coada.then(() => call('api_prezenta', d, ch)).then(st => {
+      if (pending[d] && !Object.keys(pending[d]).length) delete pending[d];
+      if (st) aplica(st); else render();
+      toast('Salvat ✓');
+    }).catch(() => {
+      pending[d] = Object.assign({}, ch, pending[d] || {});
+      toast('Nu s-a salvat — reîncerc', 3000);
+      clearTimeout(flushT); flushT = setTimeout(flush, 5000);
+    });
   });
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+function aziLocal(){ const d = new Date(); const z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { flush(); return; }
+  if (!S) return;
+  if (aziLocal() !== S.azi) IDX = null;   // s-a schimbat ziua → sare pe întâlnirea curentă
+  load();
+});
 window.addEventListener('pagehide', flush);
 
 /* ---------- GĂZDUIRE ---------- */
@@ -187,7 +214,7 @@ function vGazd(){
   const I = S.intalniri;
   let h = `<div class="card"><div class="row"><b class="sp">Rotația</b></div>
     <table><tr><th>Familie · bifă = găzduiește</th><th class="n">găzduit</th><th class="n">planificat</th></tr>
-    ${S.familii.map(f => `<tr><td><label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste !== '0' ? 'checked' : ''}>${esc(f.familie)}</label></td><td class="n">${S.gazduiri[f.familie].facute}</td><td class="n">${S.gazduiri[f.familie].planificate}</td></tr>`).join('')}</table></div>`;
+    ${S.familii.map(f => `<tr><td><label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste !== '0' ? 'checked' : ''}>${esc(f.familie)}</label>${f.gazduieste === '0' ? ' <span class="mut">(în afara rotației)</span>' : ''}</td><td class="n">${S.gazduiri[f.familie].facute}</td><td class="n">${S.gazduiri[f.familie].planificate}</td></tr>`).join('')}</table></div>`;
   const trecute = I.filter(i => i.data < S.azi);
   if (trecute.length) h += `<button class="b" style="width:100%;margin-bottom:10px" data-a="trecute">${ARATA_TRECUTE?'Ascunde':'Arată'} întâlnirile trecute (${trecute.length})</button>`;
   I.forEach(it => {
@@ -228,7 +255,7 @@ function waDeschide(t, text){ window.open('https://wa.me/' + (t||'') + '?text=' 
 function vStat(){
   const nr = S.stat.length ? S.stat[0].total : 0;
   const cls = p => p == null ? '' : p >= 80 ? 'color:var(--ok)' : p >= 60 ? 'color:var(--warn)' : 'color:var(--bad)';
-  let h = `<div class="card"><div class="mut">Întâlniri numărate: <b>${nr}</b> (Normale + Mixte, trecute, cu prezența făcută)</div></div>`;
+  let h = `<div class="card"><div class="mut">Întâlniri numărate: <b>${nr}</b> (${esc((S.numarate||[]).join(' + '))}, trecute, cu prezența făcută)</div></div>`;
   const alerte = S.stat.filter(s => s.absenteLaRand >= 2);
   if (alerte.length) h += `<div class="card"><b>De sunat</b><div class="note">2+ absențe la rând</div>
      ${alerte.map(s => `<div class="row" style="margin-top:6px"><span class="sp">${esc(s.persoana)}</span><span class="alert">${s.absenteLaRand} la rând</span></div>`).join('')}</div>`;
@@ -254,7 +281,7 @@ function vSet(){
      <div class="row mut" style="margin:4px 0 0 30px;gap:14px">
        <label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste!=='0'?'checked':''}> găzduiește</label>
        <label><input type="checkbox" data-a="fset" data-c="pe_rand" data-f="${esc(f.familie)}" ${f.pe_rand==='1'?'checked':''}> vin pe rând</label></div>`);
-  h += `</div><div class="card"><b>Jurnal</b>${S.jurnal.map(j => `<div class="note">${esc(j.ts)} · ${esc(j.de)} · ${esc(j.actiune)} · ${esc(j.detalii)}</div>`).join('') || '<div class="note">gol</div>'}</div>`;
+  h += `</div><div class="card"><b>Jurnal</b>${(S.jurnal||[]).map(j => `<div class="note">${esc(j.ts)} · ${esc(j.de)} · ${esc(j.actiune)} · ${esc(j.detalii)}</div>`).join('') || '<div class="note">gol</div>'}</div>`;
   return h;
 }
 
@@ -283,14 +310,14 @@ function act(a, el){
     if (excl.length) toast('Bifează separat: ' + excl.join(', '), 2500);
   }
   else if (a === 'tip') { call('api_tip', d, el.dataset.t).then(aplica); }
-  else if (a === 'settip') { call('api_tip', d, el.value).then(st => { aplica(st); toast('Tip schimbat'); }); }
+  else if (a === 'settip') { call('api_tip', d, el.value).then(st => { aplica(st); toast('Tip schimbat'); }).catch(() => render()); }
   else if (a === 'g') {
     const x = el.dataset.x, i = S.intalniri.find(z => z.data === d);
     if (x === 'nupoate' && !confirm(i.gazda + ' nu poate pe ' + dScurt(d) + '?\nSe face schimb cu următoarea familie propusă.')) return;
-    call('api_gazda', d, x, '').then(st => { aplica(st); toast(x==='confirma'?'Confirmat ✓':'Actualizat'); });
+    call('api_gazda', d, x, '').then(st => { aplica(st); toast(x==='confirma'?'Confirmat ✓':'Actualizat'); }).catch(() => render());
   }
-  else if (a === 'loc') { call('api_gazda', d, el.dataset.c, el.value).then(st => { aplica(st); toast('Salvat ✓'); }); }
-  else if (a === 'setg') { if (el.value === '__') return; call('api_gazda', d, 'seteaza', el.value).then(st => { aplica(st); toast('Schimbat ✓'); }); }
+  else if (a === 'loc') { call('api_gazda', d, el.dataset.c, el.value).then(st => { aplica(st); toast('Salvat ✓'); }).catch(() => render()); }
+  else if (a === 'setg') { if (el.value === '__') return; call('api_gazda', d, 'seteaza', el.value).then(st => { aplica(st); toast('Schimbat ✓'); }).catch(() => render()); }
   else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) call('api_gazda', d, 'nota', t).then(aplica); }
   else if (a === 'wa') {
     const i = S.intalniri.find(z => z.data === d);
@@ -306,11 +333,11 @@ function act(a, el){
   else if (a === 'trecute') { ARATA_TRECUTE = !ARATA_TRECUTE; render(); }
   else if (a === 'plus') { call('api_prelungeste', 4).then(st => { aplica(st); toast('+4 săptămâni'); }); }
   else if (a === 'up' || a === 'dn') { call('api_ordine', el.dataset.f, a === 'up' ? -1 : 1).then(st => { aplica(st); toast('Ordine salvată'); }); }
-  else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } call('api_familie', el.dataset.f, el.dataset.c, el.checked).then(st => { aplica(st); toast('Salvat'); }); }
+  else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } call('api_familie', el.dataset.f, el.dataset.c, el.checked).then(st => { aplica(st); toast('Salvat'); }).catch(() => render()); }
   else if (a === 'tel') { call('api_telefon', el.dataset.f, el.value).then(() => { const f = S.familii.find(x => x.familie === el.dataset.f); f.telefon = el.value; toast('Telefon salvat'); }); }
 }
 
-if (KEY) load(); else $('#app').innerHTML = '<div class="card">Deschide aplicația din linkul primit de la Tinu sau Ovidiu.</div>';
+if (KEY) porneste(); else $('#app').innerHTML = '<div class="card">Deschide aplicația din linkul primit de la Tinu sau Ovidiu.</div>';
 </script>
 </body>
 </html>
