@@ -109,7 +109,10 @@ function aplica(st){ S = st; reaplica(); render(); }
 function idxImplicit(){
   const I = S.intalniri; let k = -1;
   I.forEach((i, n) => { if (i.data <= S.azi) k = n; });
-  return k < 0 ? 0 : k;
+  if (k < 0) return 0;
+  // în ziua întâlnirii și 3 zile după, rămâne pe ea; apoi sare la următoarea
+  const zile = (dObj(S.azi) - dObj(I[k].data)) / 86400000;
+  return (zile > 3 && k + 1 < I.length) ? k + 1 : k;
 }
 
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
@@ -195,7 +198,7 @@ function vGazd(){
       <div class="row"><b>${esc(dLung(it.data))}</b><span class="sp"></span>
         <select data-a="settip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t===it.tip?'selected':''}>${t}</option>`).join('')}</select></div>
       <div class="row" style="margin-top:8px">
-        <span class="host">${it.gazda ? esc(it.gazda) : (areG ? '—' : '<span class="mut">fără gazdă</span>')}</span>
+        <span class="host">${it.gazda ? esc(it.gazda) : (areG ? '—' : esc(it.tip === 'Liberă' ? 'Săptămână liberă' : it.tip === 'Întâlnirea bărbaților' ? 'Întâlnirea bărbaților' : it.tip))}</span>
         ${it.stare ? `<span class="badge ${esc(it.stare)}">${it.stare==='Propus'?'propus':'confirmat'}</span>` : ''}
       </div>
       ${it.tip === 'Întâlnirea bărbaților' ? `<div class="row" style="margin-top:8px;gap:6px">
