@@ -64,11 +64,15 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 #load{padding:40px;text-align:center;color:var(--mut)}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .note{font-size:13px;color:var(--mut);margin-top:6px}
+.busy{opacity:.55;pointer-events:none}
+.busy .host::after{content:" · se salvează…";font-size:13px;font-weight:400;color:var(--mut)}
+#sync{display:none;margin-left:auto;font-size:11px;font-weight:600;background:var(--gal);color:#16171C;border-radius:20px;padding:2px 8px}
+#sync.on{display:inline-block}
 </style>
 </head>
 <body>
 <header>
-  <h1><img src="logo-mark.svg" alt="Harvest Arad" onerror="this.style.display='none'"><span><span id="titlu">Grup mic</span> <small id="who"></small></span></h1>
+  <h1><img src="logo-mark.svg" alt="Harvest Arad" onerror="this.style.display='none'"><span><span id="titlu">Grup mic</span> <small id="who"></small></span><span id="sync">se salvează…</span></h1>
   <nav>
     <button data-v="prez" class="on">Prezență</button>
     <button data-v="gazd">Găzduire</button>
@@ -111,20 +115,41 @@ function call(fn, ...args){
     .catch(e => { toast('Eroare: ' + (e && e.message || e), 4000); throw e; });
 }
 function reaplica(){ Object.keys(pending).forEach(d => { S.prezenta[d] = Object.assign(S.prezenta[d] || {}, pending[d]); }); }
-const CKEY = 'grupMicStare';
+const CKEY = 'grupMicStare', PKEY = 'grupMicNesalvate';
+function pastreazaPending(){ try { const x = {}; Object.keys(pending).forEach(d => { if (Object.keys(pending[d]).length) x[d] = pending[d]; }); Object.keys(inZbor).forEach(d => { x[d] = Object.assign({}, inZbor[d], x[d] || {}); }); localStorage.setItem(PKEY, JSON.stringify(x)); } catch (e) {} }
+const inZbor = {};
 function pastreaza(){ try { localStorage.setItem(CKEY, JSON.stringify(S)); } catch (e) {} }
 function dinCache(){ try { const r = localStorage.getItem(CKEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
-function arata(st){ S = st; reaplica(); $('#who').textContent = '· ' + S.user; if (S.titlu) { $('#titlu').textContent = S.titlu; document.title = S.titlu; } if (IDX === null) IDX = idxImplicit(); render(); }
-function load(){ return call('api_stare').then(st => { arata(st); pastreaza(); }); }
-function aplica(st){ S = st; reaplica(); pastreaza(); render(); }
-function porneste(){ const c = dinCache(); if (c) { try { arata(c); } catch (e) {} } load(); }
+function aziLocal(){ const d = new Date(); const z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
+function azi(){ const l = aziLocal(); return S && S.azi > l ? S.azi : l; }
+let IDX_ZI = null, ultimLoad = 0, loadInCurs = null, mutGen = 0;
+function ziCurenta(){ if (IDX === null || IDX_ZI !== azi()) { IDX = idxImplicit(); IDX_ZI = azi(); } }
+function arata(st){ S = st; reaplica(); $('#who').textContent = '· ' + S.user; if (S.titlu) { $('#titlu').textContent = S.titlu; document.title = S.titlu; } ziCurenta(); render(); }
+function load(){
+  if (loadInCurs) return loadInCurs;
+  const g = mutGen;
+  loadInCurs = call('api_stare').then(st => {
+    ultimLoad = Date.now();
+    if (inCurs || g !== mutGen) return;   // între timp s-a salvat ceva; starea mai nouă vine din coadă
+    arata(st); pastreaza();
+  }).catch(() => {}).finally(() => { loadInCurs = null; });
+  return loadInCurs;
+}
+function aplica(st){ S = st; reaplica(); ziCurenta(); pastreaza(); render(); }
+function porneste(){
+  try { const p = JSON.parse(localStorage.getItem(PKEY) || '{}'); Object.keys(p).forEach(d => { pending[d] = Object.assign(p[d], pending[d] || {}); }); } catch (e) {}
+  const c = dinCache(); if (c) { try { arata(c); } catch (e) {} }
+  load();
+  if (Object.keys(pending).length) setTimeout(flush, 300);   // bife rămase nesalvate data trecută
+}
 
 function idxImplicit(){
   const I = S.intalniri; let k = -1;
-  I.forEach((i, n) => { if (i.data <= S.azi) k = n; });
+  const A = azi();
+  I.forEach((i, n) => { if (i.data <= A) k = n; });
   if (k < 0) return 0;
   // în ziua întâlnirii și 3 zile după, rămâne pe ea; apoi sare la următoarea
-  const zile = (dObj(S.azi) - dObj(I[k].data)) / 86400000;
+  const zile = (dObj(A) - dObj(I[k].data)) / 86400000;
   return (zile > 3 && k + 1 < I.length) ? k + 1 : k;
 }
 
@@ -150,17 +175,15 @@ function vPrez(){
     <div class="d"><b>${esc(dLung(it.data))}</b>
       <span class="badge t">${esc(it.tip)}</span>
       ${it.gazda ? ` <span class="mut">gazdă: <b>${esc(it.gazda)}</b></span>` : ''}
-      ${it.data > S.azi ? ' <span class="mut">· încă n-a avut loc</span>' : ''}
+      ${it.data > azi() ? ' <span class="mut">· încă n-a avut loc</span>' : ''}
     </div>
     <button class="b" data-a="next">▶</button></div>`;
-  if (it.data > S.azi) {
-    return h + `<div class="card">Întâlnirea <b>n-a avut loc încă</b>. Prezența se poate bifa din ziua întâlnirii${it.gazda ? ', la ' + esc(it.gazda) : ''}.</div>`;
-  }
   if (!numarata) {
     return h + `<div class="card">Săptămână <b>${esc(it.tip)}</b> — nu se face prezența și nu intră în procent.
       <div class="acts"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Schimbă în Normală</button></div></div>`;
   }
-  h += `<div class="row" style="margin-bottom:10px"><span class="mut sp">${it.prezenta_facuta==='1'?'Prezență făcută · atinge ca să modifici':'Atinge numele celor prezenți'}</span>
+  const viitoare = it.data > azi();
+  h += `<div class="row" style="margin-bottom:10px"><span class="mut sp">${viitoare ? 'Prezența se face din ziua întâlnirii' : it.prezenta_facuta==='1'?'Prezență făcută · atinge ca să modifici':'Atinge numele celor prezenți'}</span>
         <button class="b p" data-a="toti">Toți prezenți</button></div>`;
   S.familii.forEach(f => {
     const pers = S.persoane.filter(p => p.familie === f.familie);
@@ -182,36 +205,64 @@ function marcheaza(data, changes){
   Object.assign(S.prezenta[data], changes);
   const it = S.intalniri.find(i => i.data === data); if (it) it.prezenta_facuta = '1';
   pending[data] = Object.assign(pending[data] || {}, changes);
+  pastreazaPending();
   render();
   clearTimeout(flushT); flushT = setTimeout(flush, 700);
 }
-let coada = Promise.resolve(); const incercari = {};
+let coada = Promise.resolve(), inCurs = 0; const incercari = {};
+function semnal(){ const e = $('#sync'); if (e) e.classList.toggle('on', inCurs > 0); }
+/** Trimite o modificare la server, pe rând. Ecranul e deja actualizat; starea de la server se aplică la golirea cozii. */
+function inCoada(fn, args){
+  inCurs++; mutGen++; semnal();
+  const p = coada.then(() => call(fn, ...args));
+  const rez = p.then(st => {
+    inCurs--; semnal();
+    if (!inCurs && st && st.intalniri) aplica(st);
+    return st;
+  }, e => { inCurs--; semnal(); throw e; });
+  coada = rez.catch(() => {});
+  return rez;
+}
+/** Modificare de găzduire: schimbă ecranul imediat, apoi salvează în coadă. */
+function gazduire(fn, args, optimist, mesaj, dCard){
+  const snap = JSON.stringify(S);
+  if (optimist) optimist();
+  if (dCard) { const x = S.intalniri.find(z => z.data === dCard); if (x) x._busy = true; }
+  render();
+  inCoada(fn, args).then(() => { if (!inCurs) toast(mesaj || 'Salvat ✓'); })
+    .catch(e => {
+      toast((e && e.message ? e.message : 'Nu s-a salvat') + ' · am revenit la datele salvate', 4500);
+      if (!inCurs) { S = JSON.parse(snap); reaplica(); render(); }
+      load();
+    });
+}
 function flush(){
   clearTimeout(flushT);
   Object.keys(pending).forEach(d => {
     const ch = pending[d];
     if (!ch || !Object.keys(ch).length) { delete pending[d]; return; }
-    pending[d] = {};
-    coada = coada.then(() => call('api_prezenta', d, ch)).then(st => {
+    pending[d] = {}; inZbor[d] = Object.assign({}, inZbor[d] || {}, ch); pastreazaPending();
+    inCoada('api_prezenta', [d, ch]).then(() => {
       if (pending[d] && !Object.keys(pending[d]).length) delete pending[d];
+      delete inZbor[d]; pastreazaPending();
       delete incercari[d];
-      if (st) aplica(st); else render();
-      toast('Salvat ✓');
+      if (!inCurs) toast('Salvat ✓');
     }).catch(() => {
       incercari[d] = (incercari[d] || 0) + 1;
-      if (incercari[d] > 3) { delete incercari[d]; toast('Nu s-a putut salva. Reîncarc datele.', 4000); load(); return; }
-      pending[d] = Object.assign({}, ch, pending[d] || {});
+      delete inZbor[d];
+      if (incercari[d] > 3) { delete incercari[d]; pastreazaPending(); toast('Nu s-a putut salva. Reîncarc datele.', 4000); load(); return; }
+      pending[d] = Object.assign({}, ch, pending[d] || {}); pastreazaPending();
       toast('Nu s-a salvat — reîncerc', 3000);
       clearTimeout(flushT); flushT = setTimeout(flush, 5000);
     });
   });
 }
-function aziLocal(){ const d = new Date(); const z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { flush(); return; }
   if (!S) return;
-  if (aziLocal() !== S.azi) IDX = null;   // s-a schimbat ziua → sare pe întâlnirea curentă
-  load();
+  const ziNoua = IDX_ZI !== azi();
+  if (ziNoua) { ziCurenta(); render(); }                // s-a schimbat ziua → sare pe întâlnirea curentă
+  if (ziNoua || Date.now() - ultimLoad > 60000) load();
 });
 window.addEventListener('pagehide', flush);
 
@@ -227,7 +278,7 @@ function vGazd(){
     const trec = it.data < S.azi;
     if (trec && !ARATA_TRECUTE) return;
     const areG = it.tip === 'Normală';
-    h += `<div class="card ${trec?'past':''} ${it.data===S.azi?'today':''}">
+    h += `<div class="card ${trec?'past':''} ${it.data===S.azi?'today':''} ${it._busy?'busy':''}">
       <div class="row"><b>${esc(dLung(it.data))}</b><span class="sp"></span>
         <select data-a="settip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t===it.tip?'selected':''}>${t}</option>`).join('')}</select></div>
       <div class="row" style="margin-top:8px">
@@ -301,7 +352,7 @@ function bind(){
 }
 function act(a, el){
   const d = el.dataset.d, it = S.intalniri[IDX];
-  if (['p','fam','toti'].indexOf(a) >= 0 && it && it.data > S.azi) { toast('Întâlnirea n-a avut loc încă', 2500); return; }
+  if (['p','fam','toti'].indexOf(a) >= 0 && it && it.data > azi()) { toast('Nu e momentul pentru prezență — întâlnirea n-a avut loc încă', 2800); return; }
   if (a === 'prev') { if (IDX > 0) IDX--; render(); }
   else if (a === 'next') { if (IDX < S.intalniri.length - 1) IDX++; render(); }
   else if (a === 'p') { const p = el.dataset.p; const ch = {}; ch[p] = !esteMarcat(it.data, p); marcheaza(it.data, ch); }
@@ -316,16 +367,20 @@ function act(a, el){
     marcheaza(it.data, ch);
     if (excl.length) toast('Bifează separat: ' + excl.join(', '), 2500);
   }
-  else if (a === 'tip') { call('api_tip', d, el.dataset.t).then(aplica); }
-  else if (a === 'settip') { call('api_tip', d, el.value).then(st => { aplica(st); toast('Tip schimbat'); }).catch(() => render()); }
+  else if (a === 'tip' || a === 'settip') {
+    const t = a === 'tip' ? el.dataset.t : el.value, i = S.intalniri.find(z => z.data === d);
+    gazduire('api_tip', [d, t], () => { i.tip = t; }, 'Tip schimbat ✓', d);
+  }
   else if (a === 'g') {
     const x = el.dataset.x, i = S.intalniri.find(z => z.data === d);
     if (x === 'nupoate' && !confirm(i.gazda + ' nu poate pe ' + dScurt(d) + '?\nSe face schimb cu următoarea familie propusă.')) return;
-    call('api_gazda', d, x, '').then(st => { aplica(st); toast(x==='confirma'?'Confirmat ✓':'Actualizat'); }).catch(() => render());
+    if (x === 'confirma') gazduire('api_gazda', [d, x, ''], () => { i.stare = 'Confirmat'; }, 'Confirmat ✓');
+    else if (x === 'anuleaza') gazduire('api_gazda', [d, x, ''], () => { i.stare = i.gazda ? 'Propus' : ''; }, 'Confirmare anulată');
+    else gazduire('api_gazda', [d, x, ''], null, 'Schimbat ✓', d);
   }
-  else if (a === 'loc') { call('api_gazda', d, el.dataset.c, el.value).then(st => { aplica(st); toast('Salvat ✓'); }).catch(() => render()); }
-  else if (a === 'setg') { if (el.value === '__') return; call('api_gazda', d, 'seteaza', el.value).then(st => { aplica(st); toast('Schimbat ✓'); }).catch(() => render()); }
-  else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) call('api_gazda', d, 'nota', t).then(aplica); }
+  else if (a === 'loc') { const i = S.intalniri.find(z => z.data === d), c = el.dataset.c, v = el.value; gazduire('api_gazda', [d, c, v], () => { i[c] = v; }, 'Salvat ✓'); }
+  else if (a === 'setg') { if (el.value === '__') return; const v = el.value, i = S.intalniri.find(z => z.data === d); gazduire('api_gazda', [d, 'seteaza', v], () => { i.gazda = v; i.stare = 'Propus'; }, 'Schimbat ✓', d); }
+  else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) gazduire('api_gazda', [d, 'nota', t], () => { i.nota = t; }, 'Notă salvată'); }
   else if (a === 'wa') {
     const i = S.intalniri.find(z => z.data === d);
     waDeschide(tel(i.gazda), `Salut! La grupul mic, joi ${dScurt(d)}, ar fi rândul vostru la găzduire (gazdă + masă). Ne confirmați dacă e în regulă pentru voi? Dacă nu se poate, facem schimb cu următoarea familie. Mulțumim!`);
@@ -338,9 +393,9 @@ function act(a, el){
     waDeschide('', txt);
   }
   else if (a === 'trecute') { ARATA_TRECUTE = !ARATA_TRECUTE; render(); }
-  else if (a === 'plus') { call('api_prelungeste', 4).then(st => { aplica(st); toast('+4 săptămâni'); }); }
+  else if (a === 'plus') { el.disabled = true; el.textContent = 'Se adaugă…'; gazduire('api_prelungeste', [4], null, '+4 săptămâni'); }
   else if (a === 'up' || a === 'dn') { call('api_ordine', el.dataset.f, a === 'up' ? -1 : 1).then(st => { aplica(st); toast('Ordine salvată'); }); }
-  else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } call('api_familie', el.dataset.f, el.dataset.c, el.checked).then(st => { aplica(st); toast('Salvat'); }).catch(() => render()); }
+  else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } const f = S.familii.find(x => x.familie === el.dataset.f), c = el.dataset.c, v = el.checked; gazduire('api_familie', [el.dataset.f, c, v], () => { f[c] = v ? '1' : '0'; }, 'Salvat ✓'); }
   else if (a === 'tel') { call('api_telefon', el.dataset.f, el.value).then(() => { const f = S.familii.find(x => x.familie === el.dataset.f); f.telefon = el.value; toast('Telefon salvat'); }); }
 }
 
