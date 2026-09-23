@@ -108,6 +108,24 @@ function dLung(s){const d=dObj(s);return ZILE[d.getDay()]+', '+d.getDate()+' '+L
 function dScurt(s){const p=s.split('-');return p[2]+'.'+p[1];}
 function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms||1800);}
 
+// Schimb de găzduire: familia aleasă ia săptămâna d, gazda veche ia cea mai apropiată săptămână viitoare a familiei alese.
+// dubla = familia care ar ajunge să găzduiască două săptămâni la rând ('' dacă nu) — doar avertizare, nu blochează.
+function planSchimb(d, v){
+  const L = S.intalniri, nn = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const idx = L.findIndex(z => z.data === d), vechi = idx >= 0 ? L[idx].gazda : '';
+  const ok = k => k !== idx && L[k].tip === 'Normală' && L[k].data >= S.azi && nn(L[k].gazda) === nn(v);
+  let j = -1;
+  for (let k = idx + 1; k < L.length && j < 0; k++) if (ok(k)) j = k;
+  for (let k = idx - 1; k >= 0 && j < 0; k--) if (ok(k)) j = k;
+  const g = L.map(z => z.gazda); if (idx >= 0) g[idx] = v; if (j >= 0 && vechi) g[j] = vechi;
+  let dubla = '', zile = '';
+  [idx, j].forEach(p => { if (dubla || p < 0 || !g[p]) return;
+    [p - 1, p + 1].forEach(q => { if (!dubla && q >= 0 && q < g.length && nn(g[q]) === nn(g[p])) { dubla = g[p]; zile = dScurt(L[Math.min(p, q)].data) + ' și ' + dScurt(L[Math.max(p, q)].data); } }); });
+  return { idx, j, vechi, dubla, zile };
+}
+function avertSchimb(p){
+  return !p.dubla || confirm('Atenție: ' + p.dubla + ' ar găzdui două săptămâni la rând (' + p.zile + ').\nSe poate, dacă au fost de acord. Continui?');
+}
 function call(fn, ...args){
   return fetch(API, { method: 'POST', keepalive: true, body: JSON.stringify({ k: KEY, fn: fn, args: args }) })
     .then(r => r.json())
@@ -379,7 +397,7 @@ function act(a, el){
     else gazduire('api_gazda', [d, x, ''], null, 'Schimbat ✓', d);
   }
   else if (a === 'loc') { const i = S.intalniri.find(z => z.data === d), c = el.dataset.c, v = el.value; gazduire('api_gazda', [d, c, v], () => { i[c] = v; }, 'Salvat ✓'); }
-  else if (a === 'setg') { if (el.value === '__') return; const v = el.value, i = S.intalniri.find(z => z.data === d); gazduire('api_gazda', [d, 'seteaza', v], () => { i.gazda = v; i.stare = 'Propus'; }, 'Schimbat ✓', d); }
+  else if (a === 'setg') { if (el.value === '__') return; const v = el.value, p = planSchimb(d, v); if (!avertSchimb(p)) { el.value = '__'; return; } gazduire('api_gazda', [d, 'seteaza', v], () => { const L = S.intalniri; L[p.idx].gazda = v; L[p.idx].stare = L[p.idx].data < S.azi ? 'Confirmat' : 'Propus'; if (p.j >= 0 && p.vechi) { L[p.j].gazda = p.vechi; L[p.j].stare = 'Propus'; } }, 'Schimbat ✓', d); }
   else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) gazduire('api_gazda', [d, 'nota', t], () => { i.nota = t; }, 'Notă salvată'); }
   else if (a === 'wa') {
     const i = S.intalniri.find(z => z.data === d);
