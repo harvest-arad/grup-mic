@@ -1,0 +1,31 @@
+{
+  "name": "Grup mic Vlad",
+  "short_name": "Grup mic Vlad",
+  "description": "Prezența și găzduirea la grupul mic — Biserica Harvest Arad",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2E7D32",
+  "theme_color": "#2A2C32",
+  "lang": "ro",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
