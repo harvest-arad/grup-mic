@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grup mic Vlad</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2A2C32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grup mic Vlad">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--soft:#F1F2F4;--bg:#F4F5F7;--card:#fff;--ink:#16171C;--mut:#70727D;--line:#E3E4E8;--acc:#2A2C32;--gal:#F5BA00;--ok:#1F9D55;--okbg:#E7F6ED;--warn:#9A6B00;--warnbg:#FFF8E1;--bad:#C8372D;--badbg:#FDECEA}
+@media (prefers-color-scheme: dark){:root{--bg:#16171C;--card:#23252B;--ink:#ECEDEF;--mut:#A3A5AE;--line:#34363D;--acc:#0F1013;--soft:#2C2E35;--ok:#3DBE74;--okbg:#173524;--warn:#F5C542;--warnbg:#3A3113;--bad:#F07167;--badbg:#3D1F1D}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
+header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 14px 0;border-bottom:4px solid var(--gal)}
+header h1{font-family:Montserrat,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700;display:flex;align-items:center;gap:10px}
+header h1 img{height:34px}
+h3,.host,.datebar .d b{font-family:Montserrat,sans-serif;font-weight:700}
+header h1 small{opacity:.75;font-weight:400}
+nav{display:flex;gap:2px}
+nav button{flex:1;background:none;border:0;color:#fff;opacity:.7;padding:10px 4px;font-size:14px;border-bottom:3px solid transparent}
+nav button{font-family:"Open Sans",sans-serif}
+nav button.on{opacity:1;border-bottom-color:var(--gal);color:var(--gal);font-weight:700}
+main{padding:12px;max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp{flex:1}
+.mut{color:var(--mut);font-size:13px}
+button.b{font-family:"Open Sans",sans-serif;font-weight:600;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:9px 12px;font-size:14px;color:var(--ink)}
+button.b.p{background:var(--gal);border-color:var(--gal);color:var(--ink);font-weight:700}
+button.b.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+button.b.sm{padding:6px 9px;font-size:13px}
+select,input{font-family:inherit;font-size:15px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=checkbox]{width:20px;height:20px;padding:0;margin:0 6px 0 0;vertical-align:middle;accent-color:var(--gal)}
+.datebar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.datebar .d{flex:1;text-align:center}
+.datebar .d b{font-size:18px;display:block}
+.fam h3{margin:0;font-size:16px}
+.chips{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.chip{flex:1;min-width:130px;padding:14px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font-size:15px;text-align:center;user-select:none}
+.chip.da{background:var(--okbg);border-color:var(--ok);color:var(--ok);font-weight:600}
+.chip.nu{background:var(--soft);color:var(--mut)}
+.badge{display:inline-block;font-size:12px;padding:3px 8px;border-radius:20px;font-weight:600}
+.badge.Propus{background:var(--warnbg);color:var(--warn)}
+.badge.Confirmat{background:var(--okbg);color:var(--ok)}
+.badge.t{background:var(--soft);color:var(--ink)}
+.host{font-size:18px;font-weight:600}
+.past{opacity:.6}
+.today{border-color:var(--gal);box-shadow:0 0 0 1px var(--gal)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 5px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:12px;color:var(--mut);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.alert{background:var(--badbg);color:var(--bad);border-radius:6px;padding:1px 6px;font-size:12px}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:20px;font-size:14px;display:none;z-index:10}
+#load{padding:40px;text-align:center;color:var(--mut)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.note{font-size:13px;color:var(--mut);margin-top:6px}
+.busy{opacity:.55;pointer-events:none}
+.busy .host::after{content:" · se salvează…";font-size:13px;font-weight:400;color:var(--mut)}
+#sync{display:none;margin-left:auto;font-size:11px;font-weight:600;background:var(--gal);color:#16171C;border-radius:20px;padding:2px 8px}
+#sync.on{display:inline-block}
+</style>
+</head>
+<body>
+<header>
+  <h1><img src="logo-mark.svg" alt="Harvest Arad" onerror="this.style.display='none'"><span><span id="titlu">Grup mic</span> <small id="who"></small></span><span id="sync">se salvează…</span></h1>
+  <nav>
+    <button data-v="prez" class="on">Prezență</button>
+    <button data-v="gazd">Găzduire</button>
+    <button data-v="stat">Statistică</button>
+  </nav>
+</header>
+<main id="app"><div id="load">Se încarcă…</div></main>
+<div id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbwkPS_ftFa6f-Ye_7KOckTA_ttR2aGqWPPM1toyvKHcPDopj2nVx9rByjYrp53B4wIv/exec';
+const KEY = (function(){
+  const q = new URLSearchParams(location.search).get('k');
+  try { if (q) localStorage.setItem('grupMicVladKey', q); return q || localStorage.getItem('grupMicVladKey') || ''; } catch (e) { return q || ''; }
+})();
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const aveaSW = !!navigator.serviceWorker.controller;
+  let reincarcat = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!aveaSW || reincarcat) return; reincarcat = true; location.reload();   // versiune nouă publicată
+  });
+}
+let S = null, VIEW = 'prez', IDX = null, ARATA_TRECUTE = false;
+const pending = {}; let flushT = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ZILE = ['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+const LUNI = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+function dObj(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function dLung(s){const d=dObj(s);return ZILE[d.getDay()]+', '+d.getDate()+' '+LUNI[d.getMonth()]+' '+d.getFullYear();}
+function dScurt(s){const p=s.split('-');return p[2]+'.'+p[1];}
+function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms||1800);}
+
+// Schimb de găzduire: familia aleasă ia săptămâna d, gazda veche ia cea mai apropiată săptămână viitoare a familiei alese.
+// dubla = familia care ar ajunge să găzduiască două săptămâni la rând ('' dacă nu) — doar avertizare, nu blochează.
+function planSchimb(d, v){
+  const L = S.intalniri, nn = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const idx = L.findIndex(z => z.data === d), vechi = idx >= 0 ? L[idx].gazda : '';
+  const ok = k => k !== idx && L[k].tip === 'Normală' && L[k].data >= S.azi && nn(L[k].gazda) === nn(v);
+  let j = -1;
+  for (let k = idx + 1; k < L.length && j < 0; k++) if (ok(k)) j = k;
+  for (let k = idx - 1; k >= 0 && j < 0; k--) if (ok(k)) j = k;
+  const g = L.map(z => z.gazda); if (idx >= 0) g[idx] = v; if (j >= 0 && vechi) g[j] = vechi;
+  let dubla = '', zile = '';
+  [idx, j].forEach(p => { if (dubla || p < 0 || !g[p]) return;
+    [p - 1, p + 1].forEach(q => { if (!dubla && q >= 0 && q < g.length && nn(g[q]) === nn(g[p])) { dubla = g[p]; zile = dScurt(L[Math.min(p, q)].data) + ' și ' + dScurt(L[Math.max(p, q)].data); } }); });
+  return { idx, j, vechi, dubla, zile };
+}
+function avertSchimb(p){
+  return !p.dubla || confirm('Atenție: ' + p.dubla + ' ar găzdui două săptămâni la rând (' + p.zile + ').\nSe poate, dacă au fost de acord. Continui?');
+}
+function call(fn, ...args){
+  return fetch(API, { method: 'POST', keepalive: true, body: JSON.stringify({ k: KEY, fn: fn, args: args }) })
+    .then(r => r.json())
+    .then(j => { if (!j.ok) throw new Error(j.error); return j.data; })
+    .catch(e => { toast('Eroare: ' + (e && e.message || e), 4000); throw e; });
+}
+function reaplica(){ Object.keys(pending).forEach(d => { S.prezenta[d] = Object.assign(S.prezenta[d] || {}, pending[d]); }); }
+const CKEY = 'grupMicVladStare', PKEY = 'grupMicVladNesalvate';
+function pastreazaPending(){ try { const x = {}; Object.keys(pending).forEach(d => { if (Object.keys(pending[d]).length) x[d] = pending[d]; }); Object.keys(inZbor).forEach(d => { x[d] = Object.assign({}, inZbor[d], x[d] || {}); }); localStorage.setItem(PKEY, JSON.stringify(x)); } catch (e) {} }
+const inZbor = {};
+function pastreaza(){ try { localStorage.setItem(CKEY, JSON.stringify(S)); } catch (e) {} }
+function dinCache(){ try { const r = localStorage.getItem(CKEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function aziLocal(){ const d = new Date(); const z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
+function azi(){ const l = aziLocal(); return S && S.azi > l ? S.azi : l; }
+let IDX_ZI = null, ultimLoad = 0, loadInCurs = null, mutGen = 0;
+function ziCurenta(){ if (IDX === null || IDX_ZI !== azi()) { IDX = idxImplicit(); IDX_ZI = azi(); } }
+function arata(st){ S = st; reaplica(); $('#who').textContent = '· ' + S.user; if (S.titlu) { $('#titlu').textContent = S.titlu; document.title = S.titlu; } ziCurenta(); render(); }
+function load(){
+  if (loadInCurs) return loadInCurs;
+  const g = mutGen;
+  loadInCurs = call('api_stare').then(st => {
+    ultimLoad = Date.now();
+    if (inCurs || g !== mutGen) return;   // între timp s-a salvat ceva; starea mai nouă vine din coadă
+    arata(st); pastreaza();
+  }).catch(() => {}).finally(() => { loadInCurs = null; });
+  return loadInCurs;
+}
+function aplica(st){ S = st; reaplica(); ziCurenta(); pastreaza(); render(); }
+function porneste(){
+  try { const p = JSON.parse(localStorage.getItem(PKEY) || '{}'); Object.keys(p).forEach(d => { pending[d] = Object.assign(p[d], pending[d] || {}); }); } catch (e) {}
+  const c = dinCache(); if (c) { try { arata(c); } catch (e) {} }
+  load();
+  if (Object.keys(pending).length) setTimeout(flush, 300);   // bife rămase nesalvate data trecută
+}
+
+function idxImplicit(){
+  const I = S.intalniri; let k = -1;
+  const A = azi();
+  I.forEach((i, n) => { if (i.data <= A) k = n; });
+  if (k < 0) return 0;
+  // în ziua întâlnirii și 3 zile după, rămâne pe ea; apoi sare la următoarea
+  const zile = (dObj(A) - dObj(I[k].data)) / 86400000;
+  return (zile > 3 && k + 1 < I.length) ? k + 1 : k;
+}
+
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
+  VIEW = b.dataset.v; render(); window.scrollTo(0,0);
+});
+
+function render(){
+  if (!S) return;
+  const v = {prez: vPrez, gazd: vGazd, stat: vStat, set: vSet}[VIEW];
+  $('#app').innerHTML = v();
+  bind();
+}
+
+/* ---------- PREZENȚĂ ---------- */
+function esteMarcat(data, p){ const m = S.prezenta[data] || {}; return m[p] === true; }
+function vPrez(){
+  const it = S.intalniri[IDX]; if (!it) return '<div class="card">Nicio întâlnire.</div>';
+  const numarata = S.numarate.indexOf(it.tip) >= 0;
+  let h = `<div class="datebar">
+    <button class="b" data-a="prev">◀</button>
+    <div class="d"><b>${esc(dLung(it.data))}</b>
+      <span class="badge t">${esc(it.tip)}</span>
+      ${it.gazda ? ` <span class="mut">gazdă: <b>${esc(it.gazda)}</b></span>` : ''}
+      ${it.data > azi() ? ' <span class="mut">· încă n-a avut loc</span>' : ''}
+    </div>
+    <button class="b" data-a="next">▶</button></div>`;
+  if (!numarata) {
+    return h + `<div class="card">Săptămână <b>${esc(it.tip)}</b> — nu se face prezența și nu intră în procent.
+      <div class="acts"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Schimbă în Normală</button></div></div>`;
+  }
+  const viitoare = it.data > azi();
+  h += `<div class="row" style="margin-bottom:10px"><span class="mut sp">${viitoare ? 'Prezența se face din ziua întâlnirii' : it.prezenta_facuta==='1'?'Prezență făcută · atinge ca să modifici':'Atinge numele celor prezenți'}</span>
+        <button class="b p" data-a="toti">Toți prezenți</button></div>`;
+  S.familii.forEach(f => {
+    const pers = S.persoane.filter(p => p.familie === f.familie);
+    if (!pers.length) return;
+    const toti = pers.every(p => esteMarcat(it.data, p.persoana));
+    const peRand = f.pe_rand === '1';
+    h += `<div class="card fam"><div class="row"><h3 class="sp">${esc(f.familie)}${it.gazda===f.familie?' 🏠':''}</h3>
+      ${peRand ? '<span class="mut">vin pe rând · bifează cine a venit</span>' : `<button class="b sm ${toti?'':'ok'}" data-a="fam" data-f="${esc(f.familie)}">${toti?'Scoate familia':'Toată familia ✓'}</button>`}</div>
+      <div class="chips">${pers.map(p => {
+        const on = esteMarcat(it.data, p.persoana);
+        return `<div class="chip ${on?'da':(it.prezenta_facuta==='1'?'nu':'')}" data-a="p" data-p="${esc(p.persoana)}">${on?'✓ ':''}${esc(p.persoana.split(' ')[0])}</div>`;
+      }).join('')}</div></div>`;
+  });
+  if (it.tip === 'Întâlnirea bărbaților') h += `<div class="note">Bărbații: ${esc(it.loc_barbati || 'Biserica')} · Femeile: ${esc(it.loc_femei || '(nestabilit)')} — se numără pentru toți; întreabă soțiile cine a fost prezentă.</div>`;
+  return h;
+}
+function marcheaza(data, changes){
+  S.prezenta[data] = S.prezenta[data] || {};
+  Object.assign(S.prezenta[data], changes);
+  const it = S.intalniri.find(i => i.data === data); if (it) it.prezenta_facuta = '1';
+  pending[data] = Object.assign(pending[data] || {}, changes);
+  pastreazaPending();
+  render();
+  clearTimeout(flushT); flushT = setTimeout(flush, 700);
+}
+let coada = Promise.resolve(), inCurs = 0; const incercari = {};
+function semnal(){ const e = $('#sync'); if (e) e.classList.toggle('on', inCurs > 0); }
+/** Trimite o modificare la server, pe rând. Ecranul e deja actualizat; starea de la server se aplică la golirea cozii. */
+function inCoada(fn, args){
+  inCurs++; mutGen++; semnal();
+  const p = coada.then(() => call(fn, ...args));
+  const rez = p.then(st => {
+    inCurs--; semnal();
+    if (!inCurs && st && st.intalniri) aplica(st);
+    return st;
+  }, e => { inCurs--; semnal(); throw e; });
+  coada = rez.catch(() => {});
+  return rez;
+}
+/** Modificare de găzduire: schimbă ecranul imediat, apoi salvează în coadă. */
+function gazduire(fn, args, optimist, mesaj, dCard){
+  const snap = JSON.stringify(S);
+  if (optimist) optimist();
+  if (dCard) { const x = S.intalniri.find(z => z.data === dCard); if (x) x._busy = true; }
+  render();
+  inCoada(fn, args).then(() => { if (!inCurs) toast(mesaj || 'Salvat ✓'); })
+    .catch(e => {
+      toast((e && e.message ? e.message : 'Nu s-a salvat') + ' · am revenit la datele salvate', 4500);
+      if (!inCurs) { S = JSON.parse(snap); reaplica(); render(); }
+      load();
+    });
+}
+function flush(){
+  clearTimeout(flushT);
+  Object.keys(pending).forEach(d => {
+    const ch = pending[d];
+    if (!ch || !Object.keys(ch).length) { delete pending[d]; return; }
+    pending[d] = {}; inZbor[d] = Object.assign({}, inZbor[d] || {}, ch); pastreazaPending();
+    inCoada('api_prezenta', [d, ch]).then(() => {
+      if (pending[d] && !Object.keys(pending[d]).length) delete pending[d];
+      delete inZbor[d]; pastreazaPending();
+      delete incercari[d];
+      if (!inCurs) toast('Salvat ✓');
+    }).catch(() => {
+      incercari[d] = (incercari[d] || 0) + 1;
+      delete inZbor[d];
+      if (incercari[d] > 3) { delete incercari[d]; pastreazaPending(); toast('Nu s-a putut salva. Reîncarc datele.', 4000); load(); return; }
+      pending[d] = Object.assign({}, ch, pending[d] || {}); pastreazaPending();
+      toast('Nu s-a salvat — reîncerc', 3000);
+      clearTimeout(flushT); flushT = setTimeout(flush, 5000);
+    });
+  });
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') { flush(); return; }
+  if (!S) return;
+  const ziNoua = IDX_ZI !== azi();
+  if (ziNoua) { ziCurenta(); render(); }                // s-a schimbat ziua → sare pe întâlnirea curentă
+  if (ziNoua || Date.now() - ultimLoad > 60000) load();
+});
+window.addEventListener('pagehide', flush);
+
+/* ---------- GĂZDUIRE ---------- */
+function vGazd(){
+  const I = S.intalniri;
+  let h = `<div class="card"><div class="row"><b class="sp">Rotația</b></div>
+    <table><tr><th>Familie · bifă = găzduiește</th><th class="n">găzduit</th><th class="n">planificat</th></tr>
+    ${S.familii.map(f => `<tr><td><label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste !== '0' ? 'checked' : ''}>${esc(f.familie)}</label>${f.gazduieste === '0' ? ' <span class="mut">(în afara rotației)</span>' : ''}</td><td class="n">${S.gazduiri[f.familie].facute}</td><td class="n">${S.gazduiri[f.familie].planificate}</td></tr>`).join('')}</table></div>`;
+  const trecute = I.filter(i => i.data < S.azi);
+  if (trecute.length) h += `<button class="b" style="width:100%;margin-bottom:10px" data-a="trecute">${ARATA_TRECUTE?'Ascunde':'Arată'} întâlnirile trecute (${trecute.length})</button>`;
+  I.forEach(it => {
+    const trec = it.data < S.azi;
+    if (trec && !ARATA_TRECUTE) return;
+    const areG = it.tip === 'Normală';
+    h += `<div class="card ${trec?'past':''} ${it.data===S.azi?'today':''} ${it._busy?'busy':''}">
+      <div class="row"><b>${esc(dLung(it.data))}</b><span class="sp"></span>
+        <select data-a="settip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t===it.tip?'selected':''}>${t}</option>`).join('')}</select></div>
+      <div class="row" style="margin-top:8px">
+        <span class="host">${it.gazda ? esc(it.gazda) : (areG ? '—' : esc(it.tip === 'Liberă' ? 'Săptămână liberă' : it.tip === 'Întâlnirea bărbaților' ? 'Întâlnirea bărbaților' : it.tip))}</span>
+        ${it.stare ? `<span class="badge ${esc(it.stare)}">${it.stare==='Propus'?'propus':'confirmat'}</span>` : ''}
+      </div>
+      ${it.tip === 'Întâlnirea bărbaților' ? `<div class="row" style="margin-top:8px;gap:6px">
+        <span class="mut" style="width:62px">Bărbați</span><input data-a="loc" data-c="loc_barbati" data-d="${esc(it.data)}" value="${esc(it.loc_barbati || 'Biserica')}" placeholder="Biserica" style="flex:1;min-width:120px">
+      </div><div class="row" style="margin-top:6px;gap:6px">
+        <span class="mut" style="width:62px">Femei</span><input data-a="loc" data-c="loc_femei" data-d="${esc(it.data)}" value="${esc(it.loc_femei)}" placeholder="la cine / unde (ex. la Ioana, cafenea)" list="familii" style="flex:1;min-width:120px">
+      </div>` : ''}
+      ${it.nota ? `<div class="note">${esc(it.nota)}</div>` : ''}
+      <div class="acts">
+        ${it.tip !== 'Întâlnirea bărbaților' && it.gazda && it.stare==='Propus' ? `<button class="b sm ok" data-a="g" data-x="confirma" data-d="${esc(it.data)}">Confirmă</button>` : ''}
+        ${it.gazda && it.stare==='Confirmat' && !trec ? `<button class="b sm" data-a="g" data-x="anuleaza" data-d="${esc(it.data)}">Anulează confirmarea</button>` : ''}
+        ${it.gazda && !trec && areG ? `<button class="b sm" data-a="g" data-x="nupoate" data-d="${esc(it.data)}">Nu poate → schimb</button>` : ''}
+        <select data-a="setg" data-d="${esc(it.data)}" style="font-size:13px;padding:5px">
+          <option value="__">Schimbă cu…</option>
+          ${S.familii.filter(f => f.gazduieste !== '0' && f.familie !== it.gazda).map(f => `<option value="${esc(f.familie)}">${esc(f.familie)}</option>`).join('')}</select>
+        <button class="b sm" data-a="nota" data-d="${esc(it.data)}">Notă</button>
+      </div></div>`;
+  });
+  h += `<datalist id="familii">${S.familii.map(f => `<option value="${esc(f.familie)}">`).join('')}</datalist>`;
+  h += `<button class="b" style="width:100%" data-a="plus">+ 4 săptămâni</button>`;
+  return h;
+}
+function tel(fam){ const f = S.familii.find(x => x.familie === fam); let t = (f && f.telefon || '').replace(/\D/g,''); if (t.startsWith('0')) t = '4' + t; return t; }
+function waDeschide(t, text){ window.open('https://wa.me/' + (t||'') + '?text=' + encodeURIComponent(text), '_blank'); }
+
+/* ---------- STATISTICĂ ---------- */
+function vStat(){
+  const nr = S.stat.length ? S.stat[0].total : 0;
+  const cls = p => p == null ? '' : p >= 80 ? 'color:var(--ok)' : p >= 60 ? 'color:var(--warn)' : 'color:var(--bad)';
+  let h = `<div class="card"><div class="mut">Întâlniri numărate: <b>${nr}</b> (${esc((S.numarate||[]).join(' + '))}, trecute, cu prezența făcută)</div></div>`;
+  const alerte = S.stat.filter(s => s.absenteLaRand >= 2);
+  if (alerte.length) h += `<div class="card"><b>De sunat</b><div class="note">2+ absențe la rând</div>
+     ${alerte.map(s => `<div class="row" style="margin-top:6px"><span class="sp">${esc(s.persoana)}</span><span class="alert">${s.absenteLaRand} la rând</span></div>`).join('')}</div>`;
+  h += `<div class="card"><table><tr><th>Persoană</th><th class="n">prez.</th><th class="n">%</th><th class="n">anul trecut</th></tr>`;
+  S.familii.forEach(f => {
+    const ps = S.stat.filter(s => s.familie === f.familie);
+    const pf = S.statFam[f.familie];
+    h += `<tr><td><b>${esc(f.familie)}</b>${f.pe_rand==='1'?' <span class="mut">(pe rând: prezentă dacă a venit unul)</span>':''}</td><td></td><td class="n"><b style="${cls(pf)}">${pf==null?'–':pf+'%'}</b></td><td></td></tr>`;
+    ps.forEach(s => h += `<tr><td style="padding-left:14px">${esc(s.persoana.split(' ')[0])}${s.absenteLaRand>=2?' <span class="alert">'+s.absenteLaRand+'</span>':''}</td>
+      <td class="n">${s.prezente}/${s.total}</td><td class="n" style="${cls(s.procent)}">${s.procent==null?'–':s.procent+'%'}</td>
+      <td class="n mut">${s.anulTrecut==null?'–':s.anulTrecut+'%'}</td></tr>`);
+  });
+  return h + `</table></div>`;
+}
+
+/* ---------- SETĂRI ---------- */
+function vSet(){
+  let h = `<div class="card"><b>Ordinea rotației</b><div class="note">Schimbarea ordinii recalculează toate gazdele <b>propuse</b> (cele confirmate rămân).</div>`;
+  S.familii.forEach((f, i) => h += `<div class="row" style="margin-top:8px"><span style="width:22px" class="mut">${i+1}.</span><b class="sp">${esc(f.familie)}</b>
+     <input type="tel" placeholder="telefon" value="${esc(f.telefon)}" data-a="tel" data-f="${esc(f.familie)}" style="width:130px">
+     <button class="b sm" data-a="up" data-f="${esc(f.familie)}" ${i?'':'disabled'}>↑</button>
+     <button class="b sm" data-a="dn" data-f="${esc(f.familie)}" ${i<S.familii.length-1?'':'disabled'}>↓</button></div>
+     <div class="row mut" style="margin:4px 0 0 30px;gap:14px">
+       <label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste!=='0'?'checked':''}> găzduiește</label>
+       <label><input type="checkbox" data-a="fset" data-c="pe_rand" data-f="${esc(f.familie)}" ${f.pe_rand==='1'?'checked':''}> vin pe rând</label></div>`);
+  h += `</div><div class="card"><b>Jurnal</b>${(S.jurnal||[]).map(j => `<div class="note">${esc(j.ts)} · ${esc(j.de)} · ${esc(j.actiune)} · ${esc(j.detalii)}</div>`).join('') || '<div class="note">gol</div>'}</div>`;
+  return h;
+}
+
+/* ---------- EVENIMENTE ---------- */
+function bind(){
+  document.querySelectorAll('[data-a]').forEach(el => {
+    const a = el.dataset.a;
+    if (el.tagName === 'SELECT' || el.tagName === 'INPUT') { el.onchange = () => act(a, el); return; }
+    el.onclick = () => act(a, el);
+  });
+}
+function act(a, el){
+  const d = el.dataset.d, it = S.intalniri[IDX];
+  if (['p','fam','toti'].indexOf(a) >= 0 && it && it.data > azi()) { toast('Nu e momentul pentru prezență — întâlnirea n-a avut loc încă', 2800); return; }
+  if (a === 'prev') { if (IDX > 0) IDX--; render(); }
+  else if (a === 'next') { if (IDX < S.intalniri.length - 1) IDX++; render(); }
+  else if (a === 'p') { const p = el.dataset.p; const ch = {}; ch[p] = !esteMarcat(it.data, p); marcheaza(it.data, ch); }
+  else if (a === 'fam') {
+    const ps = S.persoane.filter(p => p.familie === el.dataset.f);
+    const toti = ps.every(p => esteMarcat(it.data, p.persoana)); const ch = {};
+    ps.forEach(p => ch[p.persoana] = !toti); marcheaza(it.data, ch);
+  }
+  else if (a === 'toti') {   // familiile „pe rând” se bifează individual
+    const ch = {}; const excl = S.familii.filter(f => f.pe_rand === '1').map(f => f.familie);
+    S.persoane.forEach(p => { if (excl.indexOf(p.familie) < 0) ch[p.persoana] = true; });
+    marcheaza(it.data, ch);
+    if (excl.length) toast('Bifează separat: ' + excl.join(', '), 2500);
+  }
+  else if (a === 'tip' || a === 'settip') {
+    const t = a === 'tip' ? el.dataset.t : el.value, i = S.intalniri.find(z => z.data === d);
+    gazduire('api_tip', [d, t], () => { i.tip = t; }, 'Tip schimbat ✓', d);
+  }
+  else if (a === 'g') {
+    const x = el.dataset.x, i = S.intalniri.find(z => z.data === d);
+    if (x === 'nupoate' && !confirm(i.gazda + ' nu poate pe ' + dScurt(d) + '?\nSe face schimb cu următoarea familie propusă.')) return;
+    if (x === 'confirma') gazduire('api_gazda', [d, x, ''], () => { i.stare = 'Confirmat'; }, 'Confirmat ✓');
+    else if (x === 'anuleaza') gazduire('api_gazda', [d, x, ''], () => { i.stare = i.gazda ? 'Propus' : ''; }, 'Confirmare anulată');
+    else gazduire('api_gazda', [d, x, ''], null, 'Schimbat ✓', d);
+  }
+  else if (a === 'loc') { const i = S.intalniri.find(z => z.data === d), c = el.dataset.c, v = el.value; gazduire('api_gazda', [d, c, v], () => { i[c] = v; }, 'Salvat ✓'); }
+  else if (a === 'setg') { if (el.value === '__') return; const v = el.value, p = planSchimb(d, v); if (!avertSchimb(p)) { el.value = '__'; return; } gazduire('api_gazda', [d, 'seteaza', v], () => { const L = S.intalniri; L[p.idx].gazda = v; L[p.idx].stare = L[p.idx].data < S.azi ? 'Confirmat' : 'Propus'; if (p.j >= 0 && p.vechi) { L[p.j].gazda = p.vechi; L[p.j].stare = 'Propus'; } }, 'Schimbat ✓', d); }
+  else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) gazduire('api_gazda', [d, 'nota', t], () => { i.nota = t; }, 'Notă salvată'); }
+  else if (a === 'wa') {
+    const i = S.intalniri.find(z => z.data === d);
+    waDeschide(tel(i.gazda), `Salut! La grupul mic, vineri ${dScurt(d)}, ar fi rândul vostru la găzduire (gazdă + masă). Ne confirmați dacă e în regulă pentru voi? Dacă nu se poate, facem schimb cu următoarea familie. Mulțumim!`);
+  }
+  else if (a === 'wagrup') {
+    const urm = S.intalniri.filter(i => i.data >= S.azi).slice(0, 8);
+    const txt = 'Programul de găzduire la grupul mic:\n' + urm.map(i => '• ' + dScurt(i.data) + ' – ' +
+      (i.tip === 'Normală' ? (i.gazda || '?') + (i.stare === 'Propus' ? ' (de confirmat)' : '') : i.tip + (i.gazda ? ' (' + i.gazda + ')' : ''))).join('\n') +
+      '\nDacă nu puteți când vă vine rândul, spuneți-ne din timp și facem schimb cu următoarea familie.';
+    waDeschide('', txt);
+  }
+  else if (a === 'trecute') { ARATA_TRECUTE = !ARATA_TRECUTE; render(); }
+  else if (a === 'plus') { el.disabled = true; el.textContent = 'Se adaugă…'; gazduire('api_prelungeste', [4], null, '+4 săptămâni'); }
+  else if (a === 'up' || a === 'dn') { call('api_ordine', el.dataset.f, a === 'up' ? -1 : 1).then(st => { aplica(st); toast('Ordine salvată'); }); }
+  else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } const f = S.familii.find(x => x.familie === el.dataset.f), c = el.dataset.c, v = el.checked; gazduire('api_familie', [el.dataset.f, c, v], () => { f[c] = v ? '1' : '0'; }, 'Salvat ✓'); }
+  else if (a === 'tel') { call('api_telefon', el.dataset.f, el.value).then(() => { const f = S.familii.find(x => x.familie === el.dataset.f); f.telefon = el.value; toast('Telefon salvat'); }); }
+}
+
+if (KEY) porneste(); else $('#app').innerHTML = '<div class="card">Deschide aplicația din linkul primit de la Vlad.</div>';
+</script>
+</body>
+</html>
