@@ -401,7 +401,7 @@ function act(a, el){
   else if (a === 'nota') { const i = S.intalniri.find(z => z.data === d); const t = prompt('Notă pentru ' + dScurt(d), i.nota || ''); if (t !== null) gazduire('api_gazda', [d, 'nota', t], () => { i.nota = t; }, 'Notă salvată'); }
   else if (a === 'wa') {
     const i = S.intalniri.find(z => z.data === d);
-    waDeschide(tel(i.gazda), `Salut! La grupul mic, vineri ${dScurt(d)}, ar fi rândul vostru la găzduire (gazdă + masă). Ne confirmați dacă e în regulă pentru voi? Dacă nu se poate, facem schimb cu următoarea familie. Mulțumim!`);
+    waDeschide(tel(i.gazda), `Salut! La grupul mic, joi ${dScurt(d)}, ar fi rândul vostru la găzduire (gazdă + masă). Ne confirmați dacă e în regulă pentru voi? Dacă nu se poate, facem schimb cu următoarea familie. Mulțumim!`);
   }
   else if (a === 'wagrup') {
     const urm = S.intalniri.filter(i => i.data >= S.azi).slice(0, 8);
