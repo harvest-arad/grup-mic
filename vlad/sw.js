@@ -1,5 +1,5 @@
 // Păstrează fișierele aplicației pe telefon; datele vin mereu de la server.
-const CACHE = 'grup-mic-vlad-v1';
+const CACHE = 'grup-mic-vlad-v2';
 const FILES = ['./', 'index.html', 'logo-mark.svg', 'manifest.webmanifest',
                'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 const FONTURI = ['fonts.googleapis.com', 'fonts.gstatic.com'];
