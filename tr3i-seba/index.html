@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prezența Tr3i - Seba</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2A2C32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tr3i Seba">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--soft:#F1F2F4;--bg:#F4F5F7;--card:#fff;--ink:#16171C;--mut:#70727D;--line:#E3E4E8;--acc:#2A2C32;--gal:#F5BA00;--ok:#1F9D55;--okbg:#E7F6ED;--warn:#9A6B00;--warnbg:#FFF8E1;--bad:#C8372D;--badbg:#FDECEA;--bar:#B4B7B9}
+@media (prefers-color-scheme: dark){:root{--bg:#16171C;--card:#23252B;--ink:#ECEDEF;--mut:#A3A5AE;--line:#34363D;--acc:#0F1013;--soft:#2C2E35;--ok:#3DBE74;--okbg:#173524;--warn:#F5C542;--warnbg:#3A3113;--bad:#F07167;--badbg:#3D1F1D;--bar:#5E626C}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Open Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;-webkit-tap-highlight-color:transparent}
+header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 14px 0;border-bottom:4px solid var(--gal)}
+header h1{font-family:Montserrat,sans-serif;font-size:16px;margin:0 0 6px;font-weight:700;display:flex;align-items:center;gap:10px;min-height:34px}
+header h1 img{height:34px}
+header h1 small{opacity:.75;font-weight:400}
+h2,h3,.big,.datebar .d b{font-family:Montserrat,sans-serif;font-weight:700}
+nav{display:flex;gap:2px}
+nav[hidden]{display:none}
+header:has(nav[hidden]){padding-bottom:8px}
+nav button{flex:1;background:none;border:0;color:#fff;opacity:.7;padding:10px 2px;font-size:12px;font-family:Montserrat,sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.02em;border-bottom:3px solid transparent}
+nav button.on{opacity:1;border-bottom-color:var(--gal);color:var(--gal)}
+main{padding:12px 12px calc(24px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp{flex:1}
+.mut{color:var(--mut);font-size:13px}
+.note{font-size:13px;color:var(--mut);margin-top:6px}
+button.b{font-family:"Open Sans",sans-serif;font-weight:600;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:9px 12px;font-size:14px;color:var(--ink);cursor:pointer}
+button.b.p{background:var(--gal);border-color:var(--gal);color:#16171C;font-weight:700}
+button.b.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+button.b.sm{padding:6px 9px;font-size:13px}
+button.b.w{width:100%}
+button.b:disabled{opacity:.45}
+select,input{font-family:inherit;font-size:15px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);max-width:100%}
+.datebar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.datebar .d{flex:1;text-align:center;min-width:0}
+.datebar .d b{font-size:18px;display:block}
+.badge{display:inline-block;font-size:12px;padding:3px 8px;border-radius:20px;font-weight:600;background:var(--soft);color:var(--ink)}
+.badge.vin{background:var(--okbg);color:var(--ok)}
+.badge.nu{background:var(--badbg);color:var(--bad)}
+.badge.gol{background:var(--soft);color:var(--mut)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--gal);margin-left:5px;vertical-align:middle}
+.tot{display:flex;gap:8px;margin-bottom:10px}
+.tot div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
+.tot b{display:block;font-family:Montserrat,sans-serif;font-size:22px}
+.tot .v b{color:var(--ok)} .tot .n b{color:var(--bad)} .tot .g b{color:var(--mut)}
+.pers{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.pers:last-child{border-bottom:0}
+.pers.mem{flex-wrap:wrap}
+.pers.mem .nm{flex:1 1 150px}
+.pers .nm{flex:1;min-width:0}
+.pers .nm small{display:block;color:var(--mut);font-size:12px;overflow-wrap:anywhere}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--mut);padding:7px 9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on.v{background:var(--ok);color:#fff}
+.seg button.on.n{background:var(--bad);color:#fff}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.chip{padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;text-align:center;user-select:none;cursor:pointer}
+.chip small{display:block;font-size:11px;color:var(--mut);margin-top:3px}
+.chip.da{background:var(--okbg);border-color:var(--ok);color:var(--ok);font-weight:700}
+.chip.lipsa{background:var(--soft);color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:11px;color:var(--mut);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.alert{background:var(--badbg);color:var(--bad);border-radius:6px;padding:1px 6px;font-size:12px;font-weight:600}
+.bars{display:flex;align-items:flex-end;gap:4px;height:120px;margin-top:10px}
+.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.bars .c i{display:block;width:100%;max-width:26px;background:var(--gal);border-radius:4px 4px 0 0}
+.bars .c i.lo{background:var(--bar)}
+.bars .c span{font-size:10px;color:var(--mut);margin-top:3px;white-space:nowrap}
+.bars .c em{font-style:normal;font-size:11px;font-weight:700;margin-bottom:2px}
+.list-past{opacity:.6}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:20px;font-size:14px;display:none;z-index:10;max-width:90vw;text-align:center}
+#load{padding:40px;text-align:center;color:var(--mut)}
+#sync{display:none;margin-left:auto;font-size:11px;font-weight:600;background:var(--gal);color:#16171C;border-radius:20px;padding:2px 8px}
+#sync.on{display:inline-block}
+/* pagina băieților */
+.hello{font-family:Montserrat,sans-serif;font-weight:800;font-size:22px;margin:4px 0 2px}
+.when{font-family:Montserrat,sans-serif;font-weight:700;font-size:18px}
+.answer{display:flex;gap:10px;margin-top:14px}
+.answer button{flex:1;padding:18px 8px;font-size:18px;font-weight:700;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-family:Montserrat,sans-serif;cursor:pointer}
+.answer button.on.v{background:var(--ok);border-color:var(--ok);color:#fff}
+.answer button.on.n{background:var(--bad);border-color:var(--bad);color:#fff}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
+.names button{padding:14px 8px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;font-family:inherit;cursor:pointer}
+.who{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+a{color:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1><img src="logo-mark.svg" alt="" onerror="this.style.display='none'"><span><span id="titlu">Tr3i</span> <small id="who"></small></span><span id="sync">se salvează…</span></h1>
+  <nav id="nav" hidden>
+    <button data-v="conf" class="on">Confirmări</button>
+    <button data-v="prez">Prezență</button>
+    <button data-v="stat">Statistică</button>
+    <button data-v="grup">Grup</button>
+  </nav>
+</header>
+<main id="app"><div id="load">Se încarcă…</div></main>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const API = 'https://script.google.com/macros/s/AKfycbynPFrViocRJdZp7JPafwMFdnVqUvV5PYn6CNHJrmOi5R4q30irnD-YFUjhkxqlPbBu/exec';
+const P = 'tr3iSeba';                     // prefixul cheilor din localStorage (același domeniu cu alte aplicații grup-mic)
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function ls(k, v){ try { if (v === undefined) return localStorage.getItem(P + k); if (v === null) localStorage.removeItem(P + k); else localStorage.setItem(P + k, v); } catch (e) {} return null; }
+
+/* ---------- cine deschide ---------- */
+const Q = new URLSearchParams(location.search);
+const MEM = {};                             // dacă browserul refuză stocarea, cheile rămân măcar aici
+if (Q.get('k')) { MEM.k = Q.get('k'); ls('K', MEM.k); }
+if (Q.get('g')) { MEM.g = Q.get('g'); ls('G', MEM.g); }
+const KEY_L = MEM.k || ls('K') || '', KEY_G = MEM.g || ls('G') || '';
+// Linkul de grup deschis explicit câștigă (Seba își poate vedea pagina băieților); altfel, liderul.
+const MOD = Q.get('g') ? 'grup' : KEY_L ? 'lider' : KEY_G ? 'grup' : '';
+if (Q.get('k') || Q.get('g')) history.replaceState(null, '', location.pathname);   // cheia nu rămâne în bara de adrese
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const aveaSW = !!navigator.serviceWorker.controller; let re = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (aveaSW && !re) { re = true; location.reload(); } });
+}
+
+/* ---------- utilitare ---------- */
+const ZILE = ['duminică','luni','marți','miercuri','joi','vineri','sâmbătă'];
+const LUNI = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov','dec'];
+function dObj(s){ const p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+function dLung(s){ const d = dObj(s); return ZILE[d.getDay()] + ', ' + d.getDate() + ' ' + LUNI[d.getMonth()]; }
+function dZi(s){ const d = dObj(s); return ZILE[d.getDay()] + ' ' + d.getDate() + ' ' + LUNI[d.getMonth()]; }
+function dScurt(s){ const p = s.split('-'); return p[2] + '.' + p[1]; }
+function zileIntre(a, b){ return Math.round((dObj(b) - dObj(a)) / 86400000); }
+function aziLocal(){ const d = new Date(), z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
+function toast(t, ms){ const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms || 1800); }
+function wa(text){ window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
+
+function call(fn, ...args){
+  const body = { fn: fn, args: args };
+  if (MOD === 'lider') body.k = KEY_L; else body.g = KEY_G;
+  const p = window.__demoCall ? window.__demoCall(body)
+    : fetch(API, { method: 'POST', keepalive: true, body: JSON.stringify(body) }).then(r => r.json());
+  return p.then(j => { if (!j.ok) throw new Error(j.error); return j.data; });
+}
+
+/* =====================================================================
+   PAGINA BĂIEȚILOR (?g=)
+   ===================================================================== */
+let GS = null, EU = ls('Eu') || '', ALEGE = false, MOTIV_DESCHIS = false, OCUPAT = false;
+function dispozitiv(){ let d = ls('Disp'); if (!d) { d = Math.random().toString(36).slice(2, 10); ls('Disp', d); } return d || 'fara'; }
+
+function grupPorneste(){
+  $('#titlu').textContent = 'Grupul lui Seba';
+  try { const c = JSON.parse(ls('Grup') || 'null'); if (c) { GS = c; grupRender(); } } catch (e) {}
+  grupLoad();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') grupLoad(); });
+}
+function grupLoad(){
+  return call('api_grup').then(d => { GS = d; ls('Grup', JSON.stringify(d)); grupRender(); })
+    .catch(e => { if (!GS) $('#app').innerHTML = `<div class="card">${esc(e.message)}</div>`; else toast('Fără conexiune · date salvate', 2500); });
+}
+function grupRender(){
+  if (!GS) return;
+  if (GS.lider) $('#titlu').textContent = 'Grupul lui ' + GS.lider;
+  const it = GS.intalnire, eu = GS.membri.find(m => m.id === EU);
+  $('#who').textContent = eu && !ALEGE ? '· ' + eu.prenume : '';
+  if (!it) { $('#app').innerHTML = '<div class="card">Nu e nicio întâlnire programată deocamdată.</div>'; return; }
+  let h = `<div class="card"><div class="mut">Următoarea întâlnire</div><div class="when">${esc(dLung(it.data))}${it.data === GS.azi ? ' · azi' : ''}</div>
+    ${it.nota ? `<div class="note">${esc(it.nota)}</div>` : ''}${it.tip === 'Specială' ? '<div class="note">Întâlnire specială</div>' : ''}</div>`;
+  if (!eu || ALEGE) {
+    h += `<div class="card"><h3 style="margin:0">Cine ești?</h3><div class="note">Atinge-ți numele. Telefonul îl ține minte.</div>
+      <div class="names">${GS.membri.map(m => `<button data-a="eu" data-id="${esc(m.id)}">${esc(m.prenume)}</button>`).join('')}</div></div>`;
+  } else {
+    const r = GS.raspunsuri[eu.id] || '';
+    h += `<div class="card"><div class="hello">Salut, ${esc(eu.prenume)}!</div>
+      <div class="mut">${r ? 'Ai răspuns. Poți schimba până ' + (it.data === GS.azi ? 'diseară.' : 'vineri.') : 'Vii la grupul mic?'}</div>
+      <div class="answer">
+        <button class="${r === 'Vin' ? 'on v' : ''}" data-a="r" data-r="Vin" ${OCUPAT ? 'disabled' : ''}>✓ Vin</button>
+        <button class="${r === 'Nu vin' ? 'on n' : ''}" data-a="r" data-r="Nu vin" ${OCUPAT ? 'disabled' : ''}>✗ Nu pot</button>
+      </div>
+      ${MOTIV_DESCHIS ? `<div style="margin-top:12px"><div class="mut">Vrei să-i spui lui Seba de ce? (opțional)</div>
+        <div class="row" style="margin-top:6px"><input id="motiv" class="sp" maxlength="200" placeholder="ex. sunt plecat">
+        <button class="b p" data-a="motiv">Trimite</button></div></div>` : ''}
+      <div class="note" style="margin-top:12px">Nu ești ${esc(eu.prenume)}? <a href="#" data-a="schimba">Alege alt nume</a></div></div>`;
+  }
+  const vin = GS.membri.filter(m => GS.raspunsuri[m.id] === 'Vin'), nu = GS.membri.filter(m => GS.raspunsuri[m.id] === 'Nu vin');
+  const gol = GS.membri.filter(m => !GS.raspunsuri[m.id]);
+  h += `<div class="card"><b>Vin ${vin.length}</b><div class="who">${vin.map(m => `<span class="badge vin">${esc(m.prenume)}</span>`).join('') || '<span class="mut">încă nimeni</span>'}</div>
+    ${nu.length ? `<div style="margin-top:10px"><b>Nu pot ${nu.length}</b><div class="who">${nu.map(m => `<span class="badge nu">${esc(m.prenume)}</span>`).join('')}</div></div>` : ''}
+    ${gol.length ? `<div style="margin-top:10px"><b>N-au răspuns ${gol.length}</b><div class="who">${gol.map(m => `<span class="badge gol">${esc(m.prenume)}</span>`).join('')}</div></div>` : ''}</div>`;
+  const vechi = $('#motiv'), text = vechi ? vechi.value : '', focus = vechi && document.activeElement === vechi;
+  $('#app').innerHTML = h;
+  const nou = $('#motiv'); if (nou) { nou.value = text; if (focus) nou.focus(); }   // răspunsul serverului nu șterge ce scrie
+  document.querySelectorAll('[data-a]').forEach(el => el.onclick = ev => { ev.preventDefault(); grupAct(el); });
+}
+function grupAct(el){
+  const a = el.dataset.a;
+  if (a === 'eu') { EU = el.dataset.id; ls('Eu', EU); ALEGE = false; MOTIV_DESCHIS = false; grupRender(); }
+  else if (a === 'schimba') { ALEGE = true; grupRender(); }
+  else if (a === 'r') raspunde(el.dataset.r, '');
+  else if (a === 'motiv') { const v = ($('#motiv').value || '').trim(); raspunde('Nu vin', v); }
+}
+function raspunde(r, motiv){
+  const it = GS.intalnire, vechi = GS.raspunsuri[EU];
+  GS.raspunsuri[EU] = r; OCUPAT = true;
+  MOTIV_DESCHIS = r === 'Nu vin' && !motiv;
+  grupRender();
+  call('api_raspunde', it.data, EU, r, motiv, dispozitiv()).then(d => {
+    OCUPAT = false; if (motiv) MOTIV_DESCHIS = false;
+    GS = d; ls('Grup', JSON.stringify(d)); grupRender();
+    toast(r === 'Vin' ? 'Te așteptăm! ✓' : motiv ? 'Mulțumim, i-am spus lui Seba' : 'Am notat · te așteptăm data viitoare');
+  }).catch(e => {
+    OCUPAT = false; if (vechi) GS.raspunsuri[EU] = vechi; else delete GS.raspunsuri[EU];
+    MOTIV_DESCHIS = false; grupRender(); toast(e.message || 'Nu s-a salvat. Încearcă din nou.', 4000);
+  });
+}
+
+/* =====================================================================
+   APLICAȚIA LUI SEBA (?k=)
+   ===================================================================== */
+let S = null, VIEW = 'conf', IC = null, IP = null, IC_ZI = '', ARATA_TREC = false, ARATA_JUR = false;
+const pending = {}, inZbor = {}, incercari = {};
+let flushT = null, coada = Promise.resolve(), inCurs = 0, mutGen = 0, loadInCurs = null, ultimLoad = 0;
+
+function azi(){ const l = aziLocal(); return S && S.azi > l ? S.azi : l; }
+function copii(){ return S.membri.filter(m => m.rol !== 'lider'); }
+/** Cine apare la o dată: activii intrați până atunci + cei scoși între timp, dacă au ceva notat în ziua aceea. */
+function membriLa(d){
+  const c = S.confirmari[d] || {}, p = S.prezenta[d] || {};
+  return copii().filter(m => (m.activ && (!m.din || m.din <= d || d >= azi())) || c[m.id] || p[m.id] !== undefined);
+}
+function idxConf(){ const L = S.intalniri, A = azi(); const i = L.findIndex(x => x.data >= A && x.tip !== 'Anulată'); return i >= 0 ? i : Math.max(0, L.length - 1); }
+function idxPrez(){
+  const L = S.intalniri, A = azi(); let k = -1;
+  L.forEach((x, n) => { if (x.data <= A && x.tip !== 'Anulată') k = n; });
+  if (k >= 0 && zileIntre(L[k].data, A) <= 2) return k;          // vineri, sâmbătă, duminică: rămâne pe cea trecută
+  const u = L.findIndex(x => x.data > A && x.tip !== 'Anulată');
+  return u >= 0 ? u : Math.max(0, k);
+}
+function ziCurenta(){ if (IC === null || IC_ZI !== azi()) { IC = idxConf(); IP = idxPrez(); IC_ZI = azi(); } }
+
+function reaplica(){ Object.keys(pending).concat(Object.keys(inZbor)).forEach(d => { S.prezenta[d] = Object.assign(S.prezenta[d] || {}, inZbor[d] || {}, pending[d] || {}); const it = S.intalniri.find(i => i.data === d); if (it) it.prezenta_facuta = true; }); }
+function pastreaza(){ try { localStorage.setItem(P + 'Stare', JSON.stringify(S)); } catch (e) {} }
+function pastreazaPending(){ const x = {}; Object.keys(inZbor).forEach(d => { x[d] = Object.assign({}, inZbor[d]); }); Object.keys(pending).forEach(d => { if (Object.keys(pending[d]).length) x[d] = Object.assign(x[d] || {}, pending[d]); }); ls('Nesalvate', JSON.stringify(x)); }
+function arata(st){ S = st; reaplica(); $('#who').textContent = ''; ziCurenta(); render(); }
+function load(){
+  if (loadInCurs) return loadInCurs;
+  const g = mutGen;
+  loadInCurs = call('api_stare').then(st => {
+    ultimLoad = Date.now();
+    if (inCurs || g !== mutGen) return;
+    arata(st); pastreaza();
+  }).catch(e => { if (!S) $('#app').innerHTML = `<div class="card">${esc(e.message)}</div>`; else toast('Fără conexiune · arăt datele salvate', 2500); })
+    .finally(() => { loadInCurs = null; });
+  return loadInCurs;
+}
+function liderPorneste(){
+  $('#nav').hidden = false;
+  $('#titlu').textContent = 'Tr3i · Seba';
+  try { const p = JSON.parse(ls('Nesalvate') || '{}'); Object.keys(p).forEach(d => { pending[d] = Object.assign(p[d], pending[d] || {}); }); } catch (e) {}
+  try { const c = JSON.parse(localStorage.getItem(P + 'Stare') || 'null'); if (c) arata(c); } catch (e) {}
+  load();
+  if (Object.keys(pending).length) setTimeout(flush, 300);
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
+    VIEW = b.dataset.v; render(); window.scrollTo(0, 0);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { flush(); return; }
+    if (!S) return;
+    const ziNoua = IC_ZI !== azi();
+    if (ziNoua) { ziCurenta(); render(); }
+    if (ziNoua || Date.now() - ultimLoad > 60000) load();
+  });
+  window.addEventListener('pagehide', flush);
+}
+function render(){
+  if (!S) return;
+  $('#app').innerHTML = ({ conf: vConf, prez: vPrez, stat: vStat, grup: vGrup })[VIEW]();
+  document.querySelectorAll('#app [data-a]').forEach(el => {
+    if (el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type !== 'button')) el.onchange = () => act(el.dataset.a, el);
+    else el.onclick = ev => { ev.preventDefault(); act(el.dataset.a, el); };
+  });
+}
+
+/** Coada de salvări: ecranul e deja schimbat; starea de la server se aplică doar când s-a golit coada. */
+function semnal(){ $('#sync').classList.toggle('on', inCurs > 0); }
+function inCoada(fn, args){
+  inCurs++; mutGen++; semnal();
+  const rez = coada.then(() => call(fn, ...args)).then(st => {
+    inCurs--; semnal();
+    if (!inCurs && st && st.intalniri) { S = st; reaplica(); ziCurenta(); pastreaza(); render(); }
+    return st;
+  }, e => { inCurs--; semnal(); throw e; });
+  coada = rez.catch(() => {});
+  return rez;
+}
+function schimba(fn, args, optimist, mesaj){
+  const snap = JSON.stringify(S);
+  if (optimist) { optimist(); render(); }
+  return inCoada(fn, args).then(() => { if (!inCurs) toast(mesaj || 'Salvat ✓'); })
+    .catch(e => {
+      toast((e && e.message || 'Nu s-a salvat') + ' · am revenit', 4500);
+      if (!inCurs) { S = JSON.parse(snap); reaplica(); render(); }
+      load();
+    });
+}
+
+/* ---------- datebar ---------- */
+function datebar(L, i, a){
+  const it = L[i];
+  return `<div class="datebar"><button class="b" data-a="${a}" data-x="-1" ${i > 0 ? '' : 'disabled'}>◀</button>
+    <div class="d"><b>${esc(dLung(it.data))}</b>
+      ${it.tip !== 'Normală' ? `<span class="badge ${it.tip === 'Anulată' ? 'nu' : ''}">${esc(it.tip)}</span> ` : ''}
+      ${it.data === azi() ? '<span class="mut">azi</span>' : it.data < azi() ? '<span class="mut">trecută</span>' : '<span class="mut">peste ' + zileIntre(azi(), it.data) + ' zile</span>'}
+      ${it.nota ? `<div class="mut">${esc(it.nota)}</div>` : ''}</div>
+    <button class="b" data-a="${a}" data-x="1" ${i < L.length - 1 ? '' : 'disabled'}>▶</button></div>`;
+}
+
+/* ---------- CONFIRMĂRI ---------- */
+function vConf(){
+  const it = S.intalniri[IC]; if (!it) return '<div class="card">Nicio întâlnire.</div>';
+  let h = datebar(S.intalniri, IC, 'navC');
+  if (it.tip === 'Anulată') return h + `<div class="card">Întâlnire anulată: nu se cer confirmări și nu intră în statistică.
+    <div class="row" style="margin-top:8px"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Reactivează</button></div></div>`;
+  const c = S.confirmari[it.data] || {}, L = membriLa(it.data);
+  const vin = L.filter(m => (c[m.id] || {}).raspuns === 'Vin'), nu = L.filter(m => (c[m.id] || {}).raspuns === 'Nu vin'), gol = L.filter(m => !c[m.id]);
+  const viitoare = it.data >= azi();
+  h += `<div class="tot"><div class="v"><b>${vin.length}</b><span class="mut">vin</span></div><div class="n"><b>${nu.length}</b><span class="mut">nu pot</span></div><div class="g"><b>${gol.length}</b><span class="mut">fără răspuns</span></div></div>`;
+  if (viitoare) h += `<div class="card"><div class="row"><button class="b p sp" data-a="waInv" data-d="${esc(it.data)}">Trimite linkul pe grup</button>
+      <button class="b" data-a="waRem" data-d="${esc(it.data)}" ${gol.length ? '' : 'disabled'}>Reamintire (${gol.length})</button></div>
+      <div class="note">Se deschide WhatsApp cu mesajul scris; alegi grupul și trimiți.</div></div>`;
+  h += `<div class="card">`;
+  L.forEach(m => {
+    const r = c[m.id] || {};
+    h += `<div class="pers"><div class="nm"><b>${esc(m.prenume)}</b>${m.rol === 'galben' ? '<span class="dot" title="galben"></span>' : ''}
+        <small>${r.raspuns ? (r.motiv ? '„' + esc(r.motiv) + '” · ' : '') + (r.de === 'lider' ? 'pus de tine' : 'a răspuns') + (r.la ? ' ' + esc(r.la.slice(8, 10) + '.' + r.la.slice(5, 7) + ' ' + r.la.slice(11)) : '') : 'n-a răspuns'}</small></div>
+      <div class="seg"><button class="${r.raspuns === 'Vin' ? 'on v' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Vin">Vine</button><button class="${r.raspuns === 'Nu vin' ? 'on n' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Nu vin">Nu</button></div></div>`;
+  });
+  h += `<div class="note">Dacă ți-a spus cineva direct, apasă tu pentru el. Apasă din nou ca să ștergi.</div></div>`;
+  h += `<div class="card"><div class="row"><span class="mut sp">Tipul întâlnirii</span>
+      <select data-a="setTip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t === it.tip ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <button class="b sm" data-a="nota" data-d="${esc(it.data)}">${it.nota ? 'Schimbă nota' : 'Adaugă notă'}</button></div>
+      <div class="note">Nota apare și pe pagina băieților (ex. „la Darius acasă”, „ieșim la pizza”). Anulată = nu se numără.</div></div>`;
+  return h;
+}
+
+/* ---------- PREZENȚĂ ---------- */
+function estePrezent(d, id){ return (S.prezenta[d] || {})[id] === true; }
+function vPrez(){
+  const it = S.intalniri[IP]; if (!it) return '<div class="card">Nicio întâlnire.</div>';
+  let h = datebar(S.intalniri, IP, 'navP');
+  if (it.tip === 'Anulată') return h + '<div class="card">Întâlnire anulată: nu se face prezența.</div>';
+  if (it.data > azi()) return h + `<div class="card">Prezența se face din ziua întâlnirii.<div class="note">Până atunci, vezi cine a confirmat în „Confirmări”.</div></div>`;
+  const c = S.confirmari[it.data] || {}, L = membriLa(it.data);
+  const nrP = L.filter(m => estePrezent(it.data, m.id)).length;
+  const conf = L.filter(m => (c[m.id] || {}).raspuns === 'Vin');
+  h += `<div class="card"><div class="row"><span class="sp"><b style="font-size:20px;font-family:Montserrat,sans-serif">${nrP} / ${L.length}</b>
+       <span class="mut"> ${it.prezenta_facuta ? 'prezență făcută' : 'prezența nu e făcută încă'}</span></span></div>
+     <div class="row" style="margin-top:10px">
+       <button class="b ok sp" data-a="bifConf" ${conf.length ? '' : 'disabled'}>Bifează confirmații (${conf.length})</button>
+       <button class="b" data-a="toti">Toți</button></div></div>`;
+  h += `<div class="chips">${L.map(m => {
+    const on = estePrezent(it.data, m.id), r = (c[m.id] || {}).raspuns;
+    const hint = r === 'Vin' ? 'confirmase' : r === 'Nu vin' ? 'spusese că nu' : 'n-a răspuns';
+    return `<div class="chip ${on ? 'da' : it.prezenta_facuta ? 'lipsa' : ''}" data-a="p" data-id="${esc(m.id)}">${on ? '✓ ' : ''}${esc(m.prenume)}<small>${hint}</small></div>`;
+  }).join('')}</div>`;
+  if (!it.prezenta_facuta) h += `<button class="b w" style="margin-top:10px" data-a="gata" data-d="${esc(it.data)}">N-a venit nimeni · salvează așa</button>`;
+  h += `<div class="note" style="margin-top:10px">Atinge numele celor prezenți. Se salvează singur.</div>`;
+  return h;
+}
+function marcheaza(d, ch){
+  S.prezenta[d] = Object.assign(S.prezenta[d] || {}, ch);
+  const it = S.intalniri.find(i => i.data === d); if (it) it.prezenta_facuta = true;
+  pending[d] = Object.assign(pending[d] || {}, ch); pastreazaPending();
+  render();
+  clearTimeout(flushT); flushT = setTimeout(flush, 700);
+}
+function flush(){
+  clearTimeout(flushT);
+  Object.keys(pending).forEach(d => {
+    const ch = pending[d];
+    if (!ch || !Object.keys(ch).length) { delete pending[d]; return; }
+    pending[d] = {}; inZbor[d] = Object.assign({}, inZbor[d] || {}, ch); pastreazaPending();
+    inCoada('api_prezenta', [d, ch]).then(() => {
+      if (pending[d] && !Object.keys(pending[d]).length) delete pending[d];
+      delete inZbor[d]; delete incercari[d]; pastreazaPending();
+      if (!inCurs) toast('Salvat ✓');
+    }).catch(e => {
+      incercari[d] = (incercari[d] || 0) + 1; delete inZbor[d];
+      if (incercari[d] > 3 || /invalid|anulată|ziua întâlnirii|Nu există/.test(e.message || '')) {
+        delete incercari[d]; if (pending[d] && !Object.keys(pending[d]).length) delete pending[d]; pastreazaPending();
+        toast('Nu s-a putut salva: ' + (e.message || '') , 4500); load(); return;
+      }
+      pending[d] = Object.assign({}, ch, pending[d] || {}); pastreazaPending();
+      toast('Nu s-a salvat · reîncerc', 3000);
+      clearTimeout(flushT); flushT = setTimeout(flush, 5000);
+    });
+  });
+}
+
+/* ---------- STATISTICĂ ---------- */
+function statistica(){
+  const A = azi();
+  const numarate = S.intalniri.filter(i => i.tip !== 'Anulată' && i.prezenta_facuta && i.data <= A);
+  const oameni = copii().filter(m => m.activ).map(m => {
+    const ale = numarate.filter(i => !m.din || i.data >= m.din || (S.prezenta[i.data] || {})[m.id] !== undefined);
+    let prez = 0, zisVin = 0, zisVinVenit = 0, raspunsuri = 0, laRand = 0;
+    ale.forEach(i => {
+      const p = estePrezent(i.data, m.id), r = ((S.confirmari[i.data] || {})[m.id] || {}).raspuns;
+      if (p) prez++;
+      if (r) raspunsuri++;
+      if (r === 'Vin') { zisVin++; if (p) zisVinVenit++; }
+    });
+    for (let k = ale.length - 1; k >= 0 && !estePrezent(ale[k].data, m.id); k--) laRand++;
+    return { m, total: ale.length, prez, proc: ale.length ? Math.round(100 * prez / ale.length) : null,
+             raspunsuri, zisVin, zisVinVenit, laRand };
+  });
+  const serii = numarate.map(i => { const L = membriLa(i.data); return { data: i.data, prez: L.filter(m => estePrezent(i.data, m.id)).length, total: L.length,
+    conf: L.filter(m => ((S.confirmari[i.data] || {})[m.id] || {}).raspuns === 'Vin').length }; });
+  return { numarate, oameni, serii };
+}
+function vStat(){
+  const st = statistica(), cls = p => p == null ? '' : p >= 75 ? 'color:var(--ok)' : p >= 50 ? 'color:var(--warn)' : 'color:var(--bad)';
+  if (!st.numarate.length) return '<div class="card">Statistica apare după prima prezență făcută.</div>';
+  const sumP = st.serii.reduce((s, x) => s + x.prez, 0), sumT = st.serii.reduce((s, x) => s + x.total, 0);
+  const med = sumT ? Math.round(100 * sumP / sumT) : 0, ult = st.serii[st.serii.length - 1];
+  const sumC = st.serii.reduce((s, x) => s + x.conf, 0);
+  let h = `<div class="tot"><div><b style="${cls(med)}">${med}%</b><span class="mut">prezența medie</span></div>
+    <div><b>${ult.prez}/${ult.total}</b><span class="mut">ultima (${dScurt(ult.data)})</span></div>
+    <div><b>${st.numarate.length}</b><span class="mut">întâlniri</span></div></div>`;
+  const ult12 = st.serii.slice(-12), mx = Math.max(1, ...ult12.map(x => x.total));
+  h += `<div class="card"><b>Câți au venit</b><span class="mut"> · ultimele ${ult12.length}</span>
+    <div class="bars">${ult12.map(x => `<div class="c" title="${x.prez} din ${x.total} · ${x.conf} confirmaseră"><em>${x.prez}</em><i class="${x.total && x.prez / x.total < .5 ? 'lo' : ''}" style="height:${Math.max(3, 88 * x.prez / mx)}px"></i><span>${dScurt(x.data)}</span></div>`).join('')}</div>
+    <div class="note">Confirmaseră „Vin” în total ${sumC}; au venit ${sumP}.</div></div>`;
+  const alerte = st.oameni.filter(o => o.laRand >= 2).sort((a, b) => b.laRand - a.laRand);
+  if (alerte.length) h += `<div class="card"><b>De sunat</b><div class="note">Au lipsit de 2 ori sau mai mult la rând.</div>
+    ${alerte.map(o => `<div class="row" style="margin-top:8px"><span class="sp">${esc(o.m.prenume)}</span><span class="alert">${o.laRand} la rând</span></div>`).join('')}</div>`;
+  const ord = st.oameni.slice().sort((a, b) => (b.proc == null ? -1 : b.proc) - (a.proc == null ? -1 : a.proc) || a.m.prenume.localeCompare(b.m.prenume, 'ro'));
+  h += `<div class="card"><table><tr><th>Nume</th><th class="n">venit</th><th class="n">%</th><th class="n" title="la câte întâlniri a răspuns pe link">a răspuns</th><th class="n" title="a zis Vin și a venit">și-a ținut cuvântul</th></tr>
+    ${ord.map(o => `<tr><td>${esc(o.m.prenume)}${o.m.rol === 'galben' ? '<span class="dot"></span>' : ''}</td><td class="n">${o.prez}/${o.total}</td>
+      <td class="n" style="${cls(o.proc)}"><b>${o.proc == null ? '–' : o.proc + '%'}</b></td>
+      <td class="n mut">${o.raspunsuri}/${o.total}</td><td class="n mut">${o.zisVin ? o.zisVinVenit + '/' + o.zisVin : '–'}</td></tr>`).join('')}</table>
+    <div class="note">Se numără doar întâlnirile trecute, neanulate, cu prezența făcută. Cine a intrat mai târziu în grup e socotit de la data intrării.</div></div>`;
+  return h;
+}
+
+/* ---------- GRUP ---------- */
+function vGrup(){
+  const A = azi();
+  let h = `<div class="card"><b>Linkul pentru băieți</b><div class="note">Îl pui pe grupul de WhatsApp. Cu el, fiecare își alege numele și răspunde. Nu vede statistica.</div>
+    <div class="row" style="margin-top:8px"><button class="b p sp" data-a="copy">Copiază linkul</button><button class="b" data-a="waLink">Trimite pe WhatsApp</button></div>
+    <div class="note">Linkul tău (cel cu care ai deschis) rămâne doar la tine.</div></div>`;
+  h += `<div class="card"><div class="row"><b class="sp">Băieții (${copii().filter(m => m.activ).length})</b><button class="b sm" data-a="add">+ Adaugă</button></div>`;
+  copii().forEach(m => {
+    h += `<div class="pers mem ${m.activ ? '' : 'list-past'}"><div class="nm"><b>${esc(m.prenume)}</b>${m.rol === 'galben' ? '<span class="dot"></span>' : ''}<small>${esc(m.nume)}${m.activ ? '' : ' · scos din grup'}</small></div>
+      <div class="row" style="gap:6px"><button class="b sm" data-a="ren" data-id="${esc(m.id)}">Nume</button>
+      <button class="b sm" data-a="gal" data-id="${esc(m.id)}">${m.rol === 'galben' ? 'Galben ✓' : 'Galben'}</button>
+      <button class="b sm" data-a="act" data-id="${esc(m.id)}">${m.activ ? 'Scoate' : 'Readaugă'}</button></div></div>`;
+  });
+  h += `<div class="note">„Scoate” îl ascunde de pe linkul băieților, dar îi păstrează istoricul.</div></div>`;
+  const viit = S.intalniri.filter(i => i.data >= A), trec = S.intalniri.filter(i => i.data < A);
+  h += `<div class="card"><b>Programul</b><div class="note">Poți anula o vineri sau adăuga o întâlnire în altă zi.</div>
+    <div class="row" style="margin-top:8px"><input type="date" id="dataNoua" class="sp" min="${A}"><button class="b sm" data-a="addDate">Adaugă ziua</button></div>`;
+  (ARATA_TREC ? trec.concat(viit) : viit.slice(0, 12)).forEach(i => {
+    h += `<div class="pers ${i.data < A ? 'list-past' : ''}"><div class="nm"><b>${esc(dZi(i.data))}</b><small>${esc(i.nota || '')}</small></div>
+      <select data-a="setTip" data-d="${esc(i.data)}" style="font-size:13px;padding:5px">${S.tipuri.map(t => `<option ${t === i.tip ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <button class="b sm" data-a="nota" data-d="${esc(i.data)}">Notă</button></div>`;
+  });
+  h += `<button class="b w" style="margin-top:8px" data-a="trec">${ARATA_TREC ? 'Arată doar următoarele' : 'Arată tot programul'}</button></div>`;
+  h += `<div class="card"><div class="row"><b class="sp">Jurnal</b><button class="b sm" data-a="jur">${ARATA_JUR ? 'Ascunde' : 'Arată'}</button></div>
+    ${ARATA_JUR ? (S.jurnal || []).map(j => `<div class="note">${esc(j.la)} · ${esc(j.de)} · ${esc(j.actiune)} · ${esc(j.detalii)}</div>`).join('') || '<div class="note">gol</div>' : ''}</div>`;
+  return h;
+}
+
+/* ---------- acțiuni ---------- */
+function act(a, el){
+  const d = el.dataset.d, id = el.dataset.id;
+  const m = id ? S.membri.find(x => x.id === id) : null;
+  if (a === 'navC') { IC = Math.min(S.intalniri.length - 1, Math.max(0, IC + +el.dataset.x)); render(); }
+  else if (a === 'navP') { IP = Math.min(S.intalniri.length - 1, Math.max(0, IP + +el.dataset.x)); render(); }
+  else if (a === 'rasp') {
+    const it = S.intalniri[IC], c = S.confirmari[it.data] = S.confirmari[it.data] || {};
+    const nou = (c[id] || {}).raspuns === el.dataset.r ? '' : el.dataset.r;
+    schimba('api_raspuns_lider', [it.data, id, nou, ''], () => { if (nou) c[id] = { raspuns: nou, motiv: '', de: 'lider', la: '' }; else delete c[id]; }, nou ? 'Notat ✓' : 'Șters');
+  }
+  else if (a === 'p') { const it = S.intalniri[IP], ch = {}; ch[id] = !estePrezent(it.data, id); marcheaza(it.data, ch); }
+  else if (a === 'bifConf' || a === 'toti') {
+    const it = S.intalniri[IP], c = S.confirmari[it.data] || {}, ch = {};
+    membriLa(it.data).forEach(x => { if (a === 'toti' || (c[x.id] || {}).raspuns === 'Vin') ch[x.id] = true; });
+    marcheaza(it.data, ch);
+  }
+  else if (a === 'gata') schimba('api_intalnire', [d, 'prezenta_facuta', true], () => { S.intalniri.find(i => i.data === d).prezenta_facuta = true; }, 'Prezență salvată');
+  else if (a === 'tip' || a === 'setTip') {
+    const t = a === 'tip' ? el.dataset.t : el.value, i = S.intalniri.find(z => z.data === d);
+    if (t === 'Anulată' && !confirm('Anulezi întâlnirea din ' + dZi(d) + '?\nNu se mai cer confirmări și nu intră în statistică.')) { render(); return; }
+    schimba('api_intalnire', [d, 'tip', t], () => { i.tip = t; }, 'Salvat ✓');
+  }
+  else if (a === 'nota') {
+    const i = S.intalniri.find(z => z.data === d), t = prompt('Notă pentru ' + dZi(d) + ' (apare și la băieți):', i.nota || '');
+    if (t !== null) schimba('api_intalnire', [d, 'nota', t.trim()], () => { i.nota = t.trim(); }, 'Notă salvată');
+  }
+  else if (a === 'waInv') {
+    const i = S.intalniri.find(z => z.data === d);
+    wa(`Salut! 👋 ${cap(dZi(d))} ne vedem la grupul mic${i.nota ? ' (' + i.nota + ')' : ''}.\nConfirmă aici dacă vii: ${S.linkGrup}`);
+  }
+  else if (a === 'waRem') {
+    const c = S.confirmari[d] || {}, gol = membriLa(d).filter(x => !c[x.id]).map(x => x.prenume);
+    wa(`Încă n-au răspuns pentru ${dZi(d)}: ${gol.join(', ')}.\nConfirmați aici, durează 2 secunde: ${S.linkGrup}`);
+  }
+  else if (a === 'waLink') wa('Aici confirmați dacă veniți la grupul mic: ' + S.linkGrup);
+  else if (a === 'copy') {
+    const ok = () => toast('Link copiat ✓'), fb = () => prompt('Copiază linkul:', S.linkGrup);
+    if (navigator.clipboard) navigator.clipboard.writeText(S.linkGrup).then(ok, fb); else fb();
+  }
+  else if (a === 'add') {
+    const nume = prompt('Numele complet (ex. Pop Matei):'); if (!nume || !nume.trim()) return;
+    const pre = prompt('Cum apare în listă (prenumele):', nume.trim().split(/\s+/).slice(-1)[0]); if (pre === null) return;
+    schimba('api_membru', ['adauga', { nume: nume.trim(), prenume: (pre || '').trim() }], null, 'Adăugat ✓');
+  }
+  else if (a === 'ren') { const v = prompt('Cum apare ' + m.nume + ' în listă:', m.prenume); if (v && v.trim()) schimba('api_membru', ['modifica', { id, camp: 'prenume', valoare: v.trim() }], () => { m.prenume = v.trim(); }); }
+  else if (a === 'gal') { const v = m.rol === 'galben' ? '' : 'galben'; schimba('api_membru', ['modifica', { id, camp: 'rol', valoare: v }], () => { m.rol = v; }); }
+  else if (a === 'act') {
+    if (m.activ && !confirm('Îl scoți pe ' + m.prenume + ' din grup?\nIstoricul lui rămâne.')) return;
+    const v = !m.activ; schimba('api_membru', ['modifica', { id, camp: 'activ', valoare: v ? '1' : '0' }], () => { m.activ = v; });
+  }
+  else if (a === 'addDate') {
+    const v = $('#dataNoua').value; if (!v) { toast('Alege întâi ziua'); return; }
+    schimba('api_intalnire', [v, 'adauga', ''], () => { S.intalniri.push({ data: v, tip: 'Normală', nota: '', prezenta_facuta: false }); S.intalniri.sort((x, y) => x.data < y.data ? -1 : 1); IC = IP = null; ziCurenta(); }, 'Adăugată ✓');
+  }
+  else if (a === 'trec') { ARATA_TREC = !ARATA_TREC; render(); }
+  else if (a === 'jur') { ARATA_JUR = !ARATA_JUR; render(); }
+}
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ---------- pornire ---------- */
+if (MOD === 'lider') liderPorneste();
+else if (MOD === 'grup') grupPorneste();
+else $('#app').innerHTML = '<div class="card">Deschide aplicația din linkul primit pe WhatsApp.</div>';
+</script>
+</body>
+</html>
