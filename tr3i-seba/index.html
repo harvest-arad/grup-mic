@@ -50,7 +50,6 @@ select,input{font-family:inherit;font-size:15px;padding:8px;border:1px solid var
 .badge.vin{background:var(--okbg);color:var(--ok)}
 .badge.nu{background:var(--badbg);color:var(--bad)}
 .badge.gol{background:var(--soft);color:var(--mut)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--gal);margin-left:5px;vertical-align:middle}
 .tot{display:flex;gap:8px;margin-bottom:10px}
 .tot div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center}
 .tot b{display:block;font-family:Montserrat,sans-serif;font-size:22px}
@@ -83,6 +82,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .bars .c span{font-size:10px;color:var(--mut);margin-top:3px;white-space:nowrap}
 .bars .c em{font-style:normal;font-size:11px;font-weight:700;margin-bottom:2px}
 .list-past{opacity:.6}
+.sect{font-family:Montserrat,sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);margin:14px 2px 6px}
+.card.warn{border-color:var(--gal);background:var(--warnbg)}
+.card.next{border:2px solid var(--gal);cursor:pointer}
+.big{font-family:Montserrat,sans-serif;font-weight:800;font-size:20px}
+.seg.mod{margin-bottom:10px}
+.seg.mod button{flex:1;padding:10px;font-size:14px}
+.seg.mod button.on{background:var(--acc);color:#fff}
+[data-a="open"]{cursor:pointer}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:9px 14px;border-radius:20px;font-size:14px;display:none;z-index:10;max-width:90vw;text-align:center}
 #load{padding:40px;text-align:center;color:var(--mut)}
 #sync{display:none;margin-left:auto;font-size:11px;font-weight:600;background:var(--gal);color:#16171C;border-radius:20px;padding:2px 8px}
@@ -104,8 +111,8 @@ a{color:inherit}
 <header>
   <h1><img src="logo-mark.svg" alt="" onerror="this.style.display='none'"><span><span id="titlu">Tr3i</span> <small id="who"></small></span><span id="sync">se salvează…</span></h1>
   <nav id="nav" hidden>
-    <button data-v="conf" class="on">Confirmări</button>
-    <button data-v="prez">Prezență</button>
+    <button data-v="vin" class="on">Vineri</button>
+    <button data-v="prog">Program</button>
     <button data-v="stat">Statistică</button>
     <button data-v="grup">Grup</button>
   </nav>
@@ -232,31 +239,35 @@ function raspunde(r, motiv){
 /* =====================================================================
    APLICAȚIA LUI SEBA (?k=)
    ===================================================================== */
-let S = null, VIEW = 'conf', IC = null, IP = null, IC_ZI = '', ARATA_TREC = false, ARATA_JUR = false;
+let S = null, VIEW = 'vin', IDX = null, IDX_ZI = '', MOD_ALES = null, ARATA_TREC = false, ARATA_TOT = false, ARATA_JUR = false;
 const pending = {}, inZbor = {}, incercari = {};
 let flushT = null, coada = Promise.resolve(), inCurs = 0, mutGen = 0, loadInCurs = null, ultimLoad = 0;
 
 function azi(){ const l = aziLocal(); return S && S.azi > l ? S.azi : l; }
 function copii(){ return S.membri.filter(m => m.rol !== 'lider'); }
+function asistent(m){ return m.rol === 'asistent' || m.rol === 'galben'; }   // „galben” = marcajul vechi din lista GM
 /** Cine apare la o dată: activii intrați până atunci + cei scoși între timp, dacă au ceva notat în ziua aceea. */
 function membriLa(d){
   const c = S.confirmari[d] || {}, p = S.prezenta[d] || {};
   return copii().filter(m => (m.activ && (!m.din || m.din <= d || d >= azi())) || c[m.id] || p[m.id] !== undefined);
 }
-function idxConf(){ const L = S.intalniri, A = azi(); const i = L.findIndex(x => x.data >= A && x.tip !== 'Anulată'); return i >= 0 ? i : Math.max(0, L.length - 1); }
-function idxPrez(){
+/** Întâlnirea deschisă implicit: cea trecută rămâne vineri–duminică (pentru prezență), apoi următoarea. */
+function idxImplicit(){
   const L = S.intalniri, A = azi(); let k = -1;
   L.forEach((x, n) => { if (x.data <= A && x.tip !== 'Anulată') k = n; });
-  if (k >= 0 && zileIntre(L[k].data, A) <= 2) return k;          // vineri, sâmbătă, duminică: rămâne pe cea trecută
+  if (k >= 0 && zileIntre(L[k].data, A) <= 2) return k;
   const u = L.findIndex(x => x.data > A && x.tip !== 'Anulată');
   return u >= 0 ? u : Math.max(0, k);
 }
-function ziCurenta(){ if (IC === null || IC_ZI !== azi()) { IC = idxConf(); IP = idxPrez(); IC_ZI = azi(); } }
+function ziCurenta(){ if (IDX === null || IDX_ZI !== azi()) { IDX = idxImplicit(); IDX_ZI = azi(); MOD_ALES = null; } }
+function deschideData(d, mod){ const i = S.intalniri.findIndex(x => x.data === d); if (i < 0) return; IDX = i; MOD_ALES = mod || null; comuta('vin'); }
+/** Răspunsuri înainte de ziua întâlnirii, prezență din ziua ei. Seba poate comuta oricând. */
+function modul(){ const it = S.intalniri[IDX]; return MOD_ALES || (it && it.data <= azi() ? 'prez' : 'rasp'); }
 
 function reaplica(){ Object.keys(pending).concat(Object.keys(inZbor)).forEach(d => { S.prezenta[d] = Object.assign(S.prezenta[d] || {}, inZbor[d] || {}, pending[d] || {}); const it = S.intalniri.find(i => i.data === d); if (it) it.prezenta_facuta = true; }); }
 function pastreaza(){ try { localStorage.setItem(P + 'Stare', JSON.stringify(S)); } catch (e) {} }
 function pastreazaPending(){ const x = {}; Object.keys(inZbor).forEach(d => { x[d] = Object.assign({}, inZbor[d]); }); Object.keys(pending).forEach(d => { if (Object.keys(pending[d]).length) x[d] = Object.assign(x[d] || {}, pending[d]); }); ls('Nesalvate', JSON.stringify(x)); }
-function arata(st){ S = st; reaplica(); $('#who').textContent = ''; ziCurenta(); render(); }
+function arata(st){ const d = S && S.intalniri[IDX] ? S.intalniri[IDX].data : null; S = st; reaplica(); if (d) { const i = S.intalniri.findIndex(x => x.data === d); if (i >= 0) IDX = i; } ziCurenta(); render(); }
 function load(){
   if (loadInCurs) return loadInCurs;
   const g = mutGen;
@@ -268,6 +279,7 @@ function load(){
     .finally(() => { loadInCurs = null; });
   return loadInCurs;
 }
+function comuta(v){ VIEW = v; document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.v === v)); render(); window.scrollTo(0, 0); }
 function liderPorneste(){
   $('#nav').hidden = false;
   $('#titlu').textContent = 'Tr3i · Seba';
@@ -275,14 +287,11 @@ function liderPorneste(){
   try { const c = JSON.parse(localStorage.getItem(P + 'Stare') || 'null'); if (c) arata(c); } catch (e) {}
   load();
   if (Object.keys(pending).length) setTimeout(flush, 300);
-  document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
-    document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
-    VIEW = b.dataset.v; render(); window.scrollTo(0, 0);
-  });
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.v === 'vin' && VIEW === 'vin') { IDX = null; ziCurenta(); } comuta(b.dataset.v); });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { flush(); return; }
     if (!S) return;
-    const ziNoua = IC_ZI !== azi();
+    const ziNoua = IDX_ZI !== azi();
     if (ziNoua) { ziCurenta(); render(); }
     if (ziNoua || Date.now() - ultimLoad > 60000) load();
   });
@@ -290,7 +299,7 @@ function liderPorneste(){
 }
 function render(){
   if (!S) return;
-  $('#app').innerHTML = ({ conf: vConf, prez: vPrez, stat: vStat, grup: vGrup })[VIEW]();
+  $('#app').innerHTML = ({ vin: vVineri, prog: vProgram, stat: vStat, grup: vGrup })[VIEW]();
   document.querySelectorAll('#app [data-a]').forEach(el => {
     if (el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type !== 'button')) el.onchange = () => act(el.dataset.a, el);
     else el.onclick = ev => { ev.preventDefault(); act(el.dataset.a, el); };
@@ -303,7 +312,7 @@ function inCoada(fn, args){
   inCurs++; mutGen++; semnal();
   const rez = coada.then(() => call(fn, ...args)).then(st => {
     inCurs--; semnal();
-    if (!inCurs && st && st.intalniri) { S = st; reaplica(); ziCurenta(); pastreaza(); render(); }
+    if (!inCurs && st && st.intalniri) { arata(st); pastreaza(); }
     return st;
   }, e => { inCurs--; semnal(); throw e; });
   coada = rez.catch(() => {});
@@ -320,67 +329,72 @@ function schimba(fn, args, optimist, mesaj){
     });
 }
 
-/* ---------- datebar ---------- */
-function datebar(L, i, a){
-  const it = L[i];
-  return `<div class="datebar"><button class="b" data-a="${a}" data-x="-1" ${i > 0 ? '' : 'disabled'}>◀</button>
-    <div class="d"><b>${esc(dLung(it.data))}</b>
-      ${it.tip !== 'Normală' ? `<span class="badge ${it.tip === 'Anulată' ? 'nu' : ''}">${esc(it.tip)}</span> ` : ''}
-      ${it.data === azi() ? '<span class="mut">azi</span>' : it.data < azi() ? '<span class="mut">trecută</span>' : '<span class="mut">peste ' + zileIntre(azi(), it.data) + ' zile</span>'}
-      ${it.nota ? `<div class="mut">${esc(it.nota)}</div>` : ''}</div>
-    <button class="b" data-a="${a}" data-x="1" ${i < L.length - 1 ? '' : 'disabled'}>▶</button></div>`;
+/* ---------- ajutătoare ---------- */
+function relativ(d){ const z = zileIntre(azi(), d); return z === 0 ? 'azi' : z === 1 ? 'mâine' : z === -1 ? 'ieri' : z > 0 ? 'peste ' + z + ' zile' : 'acum ' + (-z) + ' zile'; }
+function raspunsuri(d){
+  const c = S.confirmari[d] || {}, L = membriLa(d);
+  return { L, vin: L.filter(m => (c[m.id] || {}).raspuns === 'Vin'), nu: L.filter(m => (c[m.id] || {}).raspuns === 'Nu vin'), gol: L.filter(m => !c[m.id]) };
 }
-
-/* ---------- CONFIRMĂRI ---------- */
-function vConf(){
-  const it = S.intalniri[IC]; if (!it) return '<div class="card">Nicio întâlnire.</div>';
-  let h = datebar(S.intalniri, IC, 'navC');
-  if (it.tip === 'Anulată') return h + `<div class="card">Întâlnire anulată: nu se cer confirmări și nu intră în statistică.
-    <div class="row" style="margin-top:8px"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Reactivează</button></div></div>`;
-  const c = S.confirmari[it.data] || {}, L = membriLa(it.data);
-  const vin = L.filter(m => (c[m.id] || {}).raspuns === 'Vin'), nu = L.filter(m => (c[m.id] || {}).raspuns === 'Nu vin'), gol = L.filter(m => !c[m.id]);
-  const viitoare = it.data >= azi();
-  h += `<div class="tot"><div class="v"><b>${vin.length}</b><span class="mut">vin</span></div><div class="n"><b>${nu.length}</b><span class="mut">nu pot</span></div><div class="g"><b>${gol.length}</b><span class="mut">fără răspuns</span></div></div>`;
-  if (viitoare) h += `<div class="card"><div class="row"><button class="b p sp" data-a="waInv" data-d="${esc(it.data)}">Trimite linkul pe grup</button>
-      <button class="b" data-a="waRem" data-d="${esc(it.data)}" ${gol.length ? '' : 'disabled'}>Reamintire (${gol.length})</button></div>
-      <div class="note">Se deschide WhatsApp cu mesajul scris; alegi grupul și trimiți.</div></div>`;
-  h += `<div class="card">`;
-  L.forEach(m => {
-    const r = c[m.id] || {};
-    h += `<div class="pers"><div class="nm"><b>${esc(m.prenume)}</b>${m.rol === 'galben' ? '<span class="dot" title="galben"></span>' : ''}
-        <small>${r.raspuns ? (r.motiv ? '„' + esc(r.motiv) + '” · ' : '') + (r.de === 'lider' ? 'pus de tine' : 'a răspuns') + (r.la ? ' ' + esc(r.la.slice(8, 10) + '.' + r.la.slice(5, 7) + ' ' + r.la.slice(11)) : '') : 'n-a răspuns'}</small></div>
-      <div class="seg"><button class="${r.raspuns === 'Vin' ? 'on v' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Vin">Vine</button><button class="${r.raspuns === 'Nu vin' ? 'on n' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Nu vin">Nu</button></div></div>`;
-  });
-  h += `<div class="note">Dacă ți-a spus cineva direct, apasă tu pentru el. Apasă din nou ca să ștergi.</div></div>`;
-  h += `<div class="card"><div class="row"><span class="mut sp">Tipul întâlnirii</span>
-      <select data-a="setTip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t === it.tip ? 'selected' : ''}>${t}</option>`).join('')}</select>
-      <button class="b sm" data-a="nota" data-d="${esc(it.data)}">${it.nota ? 'Schimbă nota' : 'Adaugă notă'}</button></div>
-      <div class="note">Nota apare și pe pagina băieților (ex. „la Darius acasă”, „ieșim la pizza”). Anulată = nu se numără.</div></div>`;
-  return h;
-}
-
-/* ---------- PREZENȚĂ ---------- */
 function estePrezent(d, id){ return (S.prezenta[d] || {})[id] === true; }
-function vPrez(){
-  const it = S.intalniri[IP]; if (!it) return '<div class="card">Nicio întâlnire.</div>';
-  let h = datebar(S.intalniri, IP, 'navP');
-  if (it.tip === 'Anulată') return h + '<div class="card">Întâlnire anulată: nu se face prezența.</div>';
-  if (it.data > azi()) return h + `<div class="card">Prezența se face din ziua întâlnirii.<div class="note">Până atunci, vezi cine a confirmat în „Confirmări”.</div></div>`;
-  const c = S.confirmari[it.data] || {}, L = membriLa(it.data);
-  const nrP = L.filter(m => estePrezent(it.data, m.id)).length;
-  const conf = L.filter(m => (c[m.id] || {}).raspuns === 'Vin');
-  h += `<div class="card"><div class="row"><span class="sp"><b style="font-size:20px;font-family:Montserrat,sans-serif">${nrP} / ${L.length}</b>
-       <span class="mut"> ${it.prezenta_facuta ? 'prezență făcută' : 'prezența nu e făcută încă'}</span></span></div>
-     <div class="row" style="margin-top:10px">
-       <button class="b ok sp" data-a="bifConf" ${conf.length ? '' : 'disabled'}>Bifează confirmații (${conf.length})</button>
-       <button class="b" data-a="toti">Toți</button></div></div>`;
-  h += `<div class="chips">${L.map(m => {
-    const on = estePrezent(it.data, m.id), r = (c[m.id] || {}).raspuns;
-    const hint = r === 'Vin' ? 'confirmase' : r === 'Nu vin' ? 'spusese că nu' : 'n-a răspuns';
-    return `<div class="chip ${on ? 'da' : it.prezenta_facuta ? 'lipsa' : ''}" data-a="p" data-id="${esc(m.id)}">${on ? '✓ ' : ''}${esc(m.prenume)}<small>${hint}</small></div>`;
-  }).join('')}</div>`;
-  if (!it.prezenta_facuta) h += `<button class="b w" style="margin-top:10px" data-a="gata" data-d="${esc(it.data)}">N-a venit nimeni · salvează așa</button>`;
-  h += `<div class="note" style="margin-top:10px">Atinge numele celor prezenți. Se salvează singur.</div>`;
+/** Cei care au lipsit la ultimele 2+ întâlniri numărate, la rând. */
+function deSunat(){
+  const numarate = S.intalniri.filter(i => i.tip !== 'Anulată' && i.prezenta_facuta && i.data <= azi());
+  return copii().filter(m => m.activ).map(m => {
+    const ale = numarate.filter(i => !m.din || i.data >= m.din || (S.prezenta[i.data] || {})[m.id] !== undefined);
+    let n = 0; for (let k = ale.length - 1; k >= 0 && !estePrezent(ale[k].data, m.id); k--) n++;
+    return { m, n };
+  }).filter(x => x.n >= 2).sort((a, b) => b.n - a.n);
+}
+
+/* ---------- VINERI: răspunsuri + prezență pe aceeași întâlnire ---------- */
+function vVineri(){
+  const L = S.intalniri, it = L[IDX]; if (!it) return '<div class="card">Nicio întâlnire în program.</div>';
+  let h = `<div class="datebar"><button class="b" data-a="nav" data-x="-1" ${IDX > 0 ? '' : 'disabled'}>◀</button>
+    <div class="d"><b>${esc(dLung(it.data))}</b><span class="mut">${relativ(it.data)}</span>
+      ${it.tip === 'Anulată' ? ' <span class="badge nu">anulată</span>' : ''}
+      <div class="mut">${it.nota ? esc(it.nota) : ''} <a href="#" data-a="nota" data-d="${esc(it.data)}">${it.nota ? 'schimbă' : '+ unde / ce facem'}</a></div></div>
+    <button class="b" data-a="nav" data-x="1" ${IDX < L.length - 1 ? '' : 'disabled'}>▶</button></div>`;
+  if (it.tip === 'Anulată') return h + `<div class="card">Nu se ține: nu se cer confirmări și nu intră în statistică.
+    <div class="row" style="margin-top:8px"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Se ține totuși</button></div></div>`;
+  const m = modul();
+  h += `<div class="seg mod"><button class="${m === 'rasp' ? 'on' : ''}" data-a="mod" data-m="rasp">Cine vine</button><button class="${m === 'prez' ? 'on' : ''}" data-a="mod" data-m="prez">Prezența</button></div>`;
+  return h + (m === 'rasp' ? blocRaspunsuri(it) : blocPrezenta(it));
+}
+
+function randRaspuns(m, r){
+  return `<div class="pers"><div class="nm"><b>${esc(m.prenume)}</b>
+      <small>${r.raspuns ? (r.motiv ? '„' + esc(r.motiv) + '” · ' : '') + (r.de === 'lider' ? 'pus de tine' : 'a răspuns pe link') + (r.la ? ' · ' + esc(r.la.slice(8, 10) + '.' + r.la.slice(5, 7) + ' ' + r.la.slice(11)) : '') : 'n-a răspuns'}</small></div>
+    <div class="seg"><button class="${r.raspuns === 'Vin' ? 'on v' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Vin">Vine</button><button class="${r.raspuns === 'Nu vin' ? 'on n' : ''}" data-a="rasp" data-id="${esc(m.id)}" data-r="Nu vin">Nu</button></div></div>`;
+}
+function blocRaspunsuri(it){
+  const R = raspunsuri(it.data), c = S.confirmari[it.data] || {}, viitoare = it.data >= azi();
+  let h = `<div class="tot"><div class="v"><b>${R.vin.length}</b><span class="mut">vin</span></div><div class="n"><b>${R.nu.length}</b><span class="mut">nu pot</span></div><div class="g"><b>${R.gol.length}</b><span class="mut">n-au răspuns</span></div></div>`;
+  if (viitoare) h += `<div class="row" style="margin-bottom:10px"><button class="b p sp" data-a="waInv" data-d="${esc(it.data)}">Cere confirmări pe grup</button>
+      <button class="b" data-a="waRem" data-d="${esc(it.data)}" ${R.gol.length ? '' : 'disabled'}>Reamintire (${R.gol.length})</button></div>`;
+  const ds = viitoare ? deSunat() : [];
+  if (ds.length) h += `<div class="card warn"><b>De sunat înainte de vineri</b><div class="note">${ds.map(x => esc(x.m.prenume) + ' (' + x.n + ' absențe la rând)').join(' · ')}</div></div>`;
+  [['N-au răspuns', R.gol], ['Vin', R.vin], ['Nu pot', R.nu]].forEach(([t, lot]) => {
+    if (!lot.length) return;
+    h += `<div class="sect">${t} · ${lot.length}</div><div class="card">${lot.map(m => randRaspuns(m, c[m.id] || {})).join('')}</div>`;
+  });
+  return h + `<div class="note">Dacă ți-a spus cineva direct, apasă tu pentru el. Apasă din nou ca să ștergi.</div>`;
+}
+
+function blocPrezenta(it){
+  if (it.data > azi()) return `<div class="card">Prezența se face din ziua întâlnirii (${esc(relativ(it.data))}).<div class="note">Până atunci, în „Cine vine” vezi răspunsurile.</div></div>`;
+  const R = raspunsuri(it.data), nrP = R.L.filter(m => estePrezent(it.data, m.id)).length;
+  let h = `<div class="card"><div class="row"><span class="sp"><b class="big">${nrP} / ${R.L.length}</b>
+       <span class="mut"> ${it.prezenta_facuta ? 'prezenți' : 'prezența nu e făcută'}</span></span>
+       <button class="b ok" data-a="bifConf" ${R.vin.length ? '' : 'disabled'}>✓ Toți confirmații (${R.vin.length})</button></div>
+     <div class="note">Atinge numele celor care au venit, din oricare listă. Atinge din nou ca să scoți bifa. Se salvează singur.</div></div>`;
+  [['Au confirmat', R.vin], ['Au spus că nu vin', R.nu], ['N-au răspuns', R.gol]].forEach(([t, lot]) => {
+    if (!lot.length) return;
+    h += `<div class="sect">${t} · ${lot.length}</div><div class="chips">${lot.map(m => {
+      const on = estePrezent(it.data, m.id);
+      return `<div class="chip ${on ? 'da' : it.prezenta_facuta ? 'lipsa' : ''}" data-a="p" data-id="${esc(m.id)}">${on ? '✓ ' : ''}${esc(m.prenume)}</div>`;
+    }).join('')}</div>`;
+  });
+  if (!it.prezenta_facuta) h += `<button class="b w" style="margin-top:12px" data-a="gata" data-d="${esc(it.data)}">N-a venit nimeni · salvează așa</button>`;
   return h;
 }
 function marcheaza(d, ch){
@@ -404,13 +418,49 @@ function flush(){
       incercari[d] = (incercari[d] || 0) + 1; delete inZbor[d];
       if (incercari[d] > 3 || /invalid|anulată|ziua întâlnirii|Nu există/.test(e.message || '')) {
         delete incercari[d]; if (pending[d] && !Object.keys(pending[d]).length) delete pending[d]; pastreazaPending();
-        toast('Nu s-a putut salva: ' + (e.message || '') , 4500); load(); return;
+        toast('Nu s-a putut salva: ' + (e.message || ''), 4500); load(); return;
       }
       pending[d] = Object.assign({}, ch, pending[d] || {}); pastreazaPending();
       toast('Nu s-a salvat · reîncerc', 3000);
       clearTimeout(flushT); flushT = setTimeout(flush, 5000);
     });
   });
+}
+
+/* ---------- PROGRAM ---------- */
+function vProgram(){
+  const A = azi(), viit = S.intalniri.filter(i => i.data >= A), trec = S.intalniri.filter(i => i.data < A).reverse();
+  const urm = viit.find(i => i.tip !== 'Anulată');
+  let h = '';
+  if (urm) {
+    const R = raspunsuri(urm.data);
+    h += `<div class="card next" data-a="open" data-d="${esc(urm.data)}"><div class="mut">Următoarea întâlnire · ${relativ(urm.data)}</div>
+      <div class="big">${esc(dLung(urm.data))}</div><div>${urm.nota ? esc(urm.nota) : '<span class="mut">încă fără loc / temă</span>'}</div>
+      <div class="note">${R.vin.length} vin · ${R.nu.length} nu pot · ${R.gol.length} n-au răspuns → deschide</div></div>`;
+  }
+  const lista = ARATA_TOT ? viit : viit.slice(0, 8);
+  h += `<div class="sect">După aceea</div><div class="card">`;
+  lista.forEach(i => {
+    if (i === urm) return;
+    const R = raspunsuri(i.data), an = i.tip === 'Anulată';
+    h += `<div class="pers ${an ? 'list-past' : ''}"><div class="nm" data-a="open" data-d="${esc(i.data)}"><b>${esc(dZi(i.data))}</b>
+        <small>${an ? 'nu se ține' + (i.nota ? ' · ' + esc(i.nota) : '') : [i.nota ? esc(i.nota) : '', R.vin.length + R.nu.length ? R.vin.length + ' vin · ' + R.nu.length + ' nu pot' : ''].filter(Boolean).join(' · ')}</small></div>
+      <button class="b sm" data-a="nota" data-d="${esc(i.data)}">Notă</button>
+      <button class="b sm" data-a="tip" data-d="${esc(i.data)}" data-t="${an ? 'Normală' : 'Anulată'}">${an ? 'Se ține' : 'Anulează'}</button></div>`;
+  });
+  h += `</div>`;
+  if (viit.length > 8) h += `<button class="b w" data-a="tot">${ARATA_TOT ? 'Arată doar următoarele' : 'Arată tot anul (' + viit.length + ')'}</button>`;
+  h += `<div class="card" style="margin-top:10px"><b>Întâlnire în altă zi</b><div class="note">Dacă vă vedeți excepțional altă dată decât vineri. Vinerea obișnuită o anulezi separat.</div>
+    <div class="row" style="margin-top:8px"><input type="date" id="dataNoua" class="sp" min="${A}"><button class="b" data-a="addDate">Adaugă</button></div></div>`;
+  if (trec.length) {
+    const nefacute = trec.filter(i => i.tip !== 'Anulată' && !i.prezenta_facuta).length;
+    h += `<button class="b w" data-a="trec">${ARATA_TREC ? 'Ascunde' : 'Arată'} întâlnirile trecute (${trec.length})${nefacute ? ' · ' + nefacute + ' fără prezență' : ''}</button>`;
+    if (ARATA_TREC) h += `<div class="card" style="margin-top:10px">${trec.map(i => {
+      const an = i.tip === 'Anulată', R = raspunsuri(i.data), p = R.L.filter(m => estePrezent(i.data, m.id)).length;
+      return `<div class="pers ${an ? 'list-past' : ''}" data-a="open" data-d="${esc(i.data)}" data-m="prez"><div class="nm"><b>${esc(dZi(i.data))}</b><small>${an ? 'nu s-a ținut' : i.prezenta_facuta ? p + ' din ' + R.L.length + ' au venit' : '<span class="alert">prezența nu e făcută</span>'}</small></div><span class="mut">›</span></div>`;
+    }).join('')}</div>`;
+  }
+  return h;
 }
 
 /* ---------- STATISTICĂ ---------- */
@@ -427,8 +477,7 @@ function statistica(){
       if (r === 'Vin') { zisVin++; if (p) zisVinVenit++; }
     });
     for (let k = ale.length - 1; k >= 0 && !estePrezent(ale[k].data, m.id); k--) laRand++;
-    return { m, total: ale.length, prez, proc: ale.length ? Math.round(100 * prez / ale.length) : null,
-             raspunsuri, zisVin, zisVinVenit, laRand };
+    return { m, total: ale.length, prez, proc: ale.length ? Math.round(100 * prez / ale.length) : null, raspunsuri, zisVin, zisVinVenit, laRand };
   });
   const serii = numarate.map(i => { const L = membriLa(i.data); return { data: i.data, prez: L.filter(m => estePrezent(i.data, m.id)).length, total: L.length,
     conf: L.filter(m => ((S.confirmari[i.data] || {})[m.id] || {}).raspuns === 'Vin').length }; });
@@ -448,11 +497,11 @@ function vStat(){
     <div class="bars">${ult12.map(x => `<div class="c" title="${x.prez} din ${x.total} · ${x.conf} confirmaseră"><em>${x.prez}</em><i class="${x.total && x.prez / x.total < .5 ? 'lo' : ''}" style="height:${Math.max(3, 88 * x.prez / mx)}px"></i><span>${dScurt(x.data)}</span></div>`).join('')}</div>
     <div class="note">Confirmaseră „Vin” în total ${sumC}; au venit ${sumP}.</div></div>`;
   const alerte = st.oameni.filter(o => o.laRand >= 2).sort((a, b) => b.laRand - a.laRand);
-  if (alerte.length) h += `<div class="card"><b>De sunat</b><div class="note">Au lipsit de 2 ori sau mai mult la rând.</div>
+  if (alerte.length) h += `<div class="card warn"><b>De sunat</b><div class="note">Au lipsit de 2 ori sau mai mult la rând.</div>
     ${alerte.map(o => `<div class="row" style="margin-top:8px"><span class="sp">${esc(o.m.prenume)}</span><span class="alert">${o.laRand} la rând</span></div>`).join('')}</div>`;
   const ord = st.oameni.slice().sort((a, b) => (b.proc == null ? -1 : b.proc) - (a.proc == null ? -1 : a.proc) || a.m.prenume.localeCompare(b.m.prenume, 'ro'));
   h += `<div class="card"><table><tr><th>Nume</th><th class="n">venit</th><th class="n">%</th><th class="n" title="la câte întâlniri a răspuns pe link">a răspuns</th><th class="n" title="a zis Vin și a venit">și-a ținut cuvântul</th></tr>
-    ${ord.map(o => `<tr><td>${esc(o.m.prenume)}${o.m.rol === 'galben' ? '<span class="dot"></span>' : ''}</td><td class="n">${o.prez}/${o.total}</td>
+    ${ord.map(o => `<tr><td>${esc(o.m.prenume)}</td><td class="n">${o.prez}/${o.total}</td>
       <td class="n" style="${cls(o.proc)}"><b>${o.proc == null ? '–' : o.proc + '%'}</b></td>
       <td class="n mut">${o.raspunsuri}/${o.total}</td><td class="n mut">${o.zisVin ? o.zisVinVenit + '/' + o.zisVin : '–'}</td></tr>`).join('')}</table>
     <div class="note">Se numără doar întâlnirile trecute, neanulate, cu prezența făcută. Cine a intrat mai târziu în grup e socotit de la data intrării.</div></div>`;
@@ -461,27 +510,17 @@ function vStat(){
 
 /* ---------- GRUP ---------- */
 function vGrup(){
-  const A = azi();
-  let h = `<div class="card"><b>Linkul pentru băieți</b><div class="note">Îl pui pe grupul de WhatsApp. Cu el, fiecare își alege numele și răspunde. Nu vede statistica.</div>
-    <div class="row" style="margin-top:8px"><button class="b p sp" data-a="copy">Copiază linkul</button><button class="b" data-a="waLink">Trimite pe WhatsApp</button></div>
-    <div class="note">Linkul tău (cel cu care ai deschis) rămâne doar la tine.</div></div>`;
-  h += `<div class="card"><div class="row"><b class="sp">Băieții (${copii().filter(m => m.activ).length})</b><button class="b sm" data-a="add">+ Adaugă</button></div>`;
-  copii().forEach(m => {
-    h += `<div class="pers mem ${m.activ ? '' : 'list-past'}"><div class="nm"><b>${esc(m.prenume)}</b>${m.rol === 'galben' ? '<span class="dot"></span>' : ''}<small>${esc(m.nume)}${m.activ ? '' : ' · scos din grup'}</small></div>
+  const cop = copii(), ord = cop.filter(m => m.activ && asistent(m)).concat(cop.filter(m => m.activ && !asistent(m)), cop.filter(m => !m.activ));
+  const lider = S.membri.find(m => m.rol === 'lider');
+  let h = `<div class="card"><div class="row"><b class="sp">Grupul (${cop.filter(m => m.activ).length} + ${lider ? esc(lider.prenume) : 'lider'})</b><button class="b sm" data-a="add">+ Adaugă</button></div>`;
+  ord.forEach(m => {
+    h += `<div class="pers mem ${m.activ ? '' : 'list-past'}"><div class="nm"><b>${esc(m.prenume)}</b>${asistent(m) && m.activ ? ' <span class="badge">asistent</span>' : ''}<small>${esc(m.nume)}${m.activ ? '' : ' · scos din grup'}</small></div>
       <div class="row" style="gap:6px"><button class="b sm" data-a="ren" data-id="${esc(m.id)}">Nume</button>
-      <button class="b sm" data-a="gal" data-id="${esc(m.id)}">${m.rol === 'galben' ? 'Galben ✓' : 'Galben'}</button>
       <button class="b sm" data-a="act" data-id="${esc(m.id)}">${m.activ ? 'Scoate' : 'Readaugă'}</button></div></div>`;
   });
-  h += `<div class="note">„Scoate” îl ascunde de pe linkul băieților, dar îi păstrează istoricul.</div></div>`;
-  const viit = S.intalniri.filter(i => i.data >= A), trec = S.intalniri.filter(i => i.data < A);
-  h += `<div class="card"><b>Programul</b><div class="note">Poți anula o vineri sau adăuga o întâlnire în altă zi.</div>
-    <div class="row" style="margin-top:8px"><input type="date" id="dataNoua" class="sp" min="${A}"><button class="b sm" data-a="addDate">Adaugă ziua</button></div>`;
-  (ARATA_TREC ? trec.concat(viit) : viit.slice(0, 12)).forEach(i => {
-    h += `<div class="pers ${i.data < A ? 'list-past' : ''}"><div class="nm"><b>${esc(dZi(i.data))}</b><small>${esc(i.nota || '')}</small></div>
-      <select data-a="setTip" data-d="${esc(i.data)}" style="font-size:13px;padding:5px">${S.tipuri.map(t => `<option ${t === i.tip ? 'selected' : ''}>${t}</option>`).join('')}</select>
-      <button class="b sm" data-a="nota" data-d="${esc(i.data)}">Notă</button></div>`;
-  });
-  h += `<button class="b w" style="margin-top:8px" data-a="trec">${ARATA_TREC ? 'Arată doar următoarele' : 'Arată tot programul'}</button></div>`;
+  h += `<div class="note">„Scoate” îl ascunde de pe linkul de confirmare, dar îi păstrează istoricul.</div></div>`;
+  h += `<div class="card"><b>Linkul de confirmare</b><div class="note">Același link pentru toată lumea, pus pe grupul de WhatsApp. Fiecare își alege numele o dată și răspunde „Vin” / „Nu pot”. Nu vede statistica și nici motivele altora. Butonul „Cere confirmări pe grup” din Vineri îl trimite deja.</div>
+    <div class="row" style="margin-top:8px"><button class="b" data-a="copy">Copiază linkul</button></div></div>`;
   h += `<div class="card"><div class="row"><b class="sp">Jurnal</b><button class="b sm" data-a="jur">${ARATA_JUR ? 'Ascunde' : 'Arată'}</button></div>
     ${ARATA_JUR ? (S.jurnal || []).map(j => `<div class="note">${esc(j.la)} · ${esc(j.de)} · ${esc(j.actiune)} · ${esc(j.detalii)}</div>`).join('') || '<div class="note">gol</div>' : ''}</div>`;
   return h;
@@ -491,27 +530,25 @@ function vGrup(){
 function act(a, el){
   const d = el.dataset.d, id = el.dataset.id;
   const m = id ? S.membri.find(x => x.id === id) : null;
-  if (a === 'navC') { IC = Math.min(S.intalniri.length - 1, Math.max(0, IC + +el.dataset.x)); render(); }
-  else if (a === 'navP') { IP = Math.min(S.intalniri.length - 1, Math.max(0, IP + +el.dataset.x)); render(); }
+  const it = S.intalniri[IDX];
+  if (a === 'nav') { IDX = Math.min(S.intalniri.length - 1, Math.max(0, IDX + +el.dataset.x)); MOD_ALES = null; render(); }
+  else if (a === 'mod') { MOD_ALES = el.dataset.m; render(); }
+  else if (a === 'open') deschideData(d, el.dataset.m);
   else if (a === 'rasp') {
-    const it = S.intalniri[IC], c = S.confirmari[it.data] = S.confirmari[it.data] || {};
+    const c = S.confirmari[it.data] = S.confirmari[it.data] || {};
     const nou = (c[id] || {}).raspuns === el.dataset.r ? '' : el.dataset.r;
     schimba('api_raspuns_lider', [it.data, id, nou, ''], () => { if (nou) c[id] = { raspuns: nou, motiv: '', de: 'lider', la: '' }; else delete c[id]; }, nou ? 'Notat ✓' : 'Șters');
   }
-  else if (a === 'p') { const it = S.intalniri[IP], ch = {}; ch[id] = !estePrezent(it.data, id); marcheaza(it.data, ch); }
-  else if (a === 'bifConf' || a === 'toti') {
-    const it = S.intalniri[IP], c = S.confirmari[it.data] || {}, ch = {};
-    membriLa(it.data).forEach(x => { if (a === 'toti' || (c[x.id] || {}).raspuns === 'Vin') ch[x.id] = true; });
-    marcheaza(it.data, ch);
-  }
+  else if (a === 'p') { const ch = {}; ch[id] = !estePrezent(it.data, id); marcheaza(it.data, ch); }
+  else if (a === 'bifConf') { const ch = {}; raspunsuri(it.data).vin.forEach(x => { ch[x.id] = true; }); marcheaza(it.data, ch); }
   else if (a === 'gata') schimba('api_intalnire', [d, 'prezenta_facuta', true], () => { S.intalniri.find(i => i.data === d).prezenta_facuta = true; }, 'Prezență salvată');
-  else if (a === 'tip' || a === 'setTip') {
-    const t = a === 'tip' ? el.dataset.t : el.value, i = S.intalniri.find(z => z.data === d);
-    if (t === 'Anulată' && !confirm('Anulezi întâlnirea din ' + dZi(d) + '?\nNu se mai cer confirmări și nu intră în statistică.')) { render(); return; }
-    schimba('api_intalnire', [d, 'tip', t], () => { i.tip = t; }, 'Salvat ✓');
+  else if (a === 'tip') {
+    const t = el.dataset.t, i = S.intalniri.find(z => z.data === d);
+    if (t === 'Anulată' && !confirm('Anulezi întâlnirea din ' + dZi(d) + '?\nNu se mai cer confirmări și nu intră în statistică.')) return;
+    schimba('api_intalnire', [d, 'tip', t], () => { i.tip = t; }, t === 'Anulată' ? 'Anulată' : 'Se ține ✓');
   }
   else if (a === 'nota') {
-    const i = S.intalniri.find(z => z.data === d), t = prompt('Notă pentru ' + dZi(d) + ' (apare și la băieți):', i.nota || '');
+    const i = S.intalniri.find(z => z.data === d), t = prompt('Unde vă vedeți / ce faceți ' + dZi(d) + '? (apare și la băieți)', i.nota || '');
     if (t !== null) schimba('api_intalnire', [d, 'nota', t.trim()], () => { i.nota = t.trim(); }, 'Notă salvată');
   }
   else if (a === 'waInv') {
@@ -519,10 +556,9 @@ function act(a, el){
     wa(`Salut! 👋 ${cap(dZi(d))} ne vedem la grupul mic${i.nota ? ' (' + i.nota + ')' : ''}.\nConfirmă aici dacă vii: ${S.linkGrup}`);
   }
   else if (a === 'waRem') {
-    const c = S.confirmari[d] || {}, gol = membriLa(d).filter(x => !c[x.id]).map(x => x.prenume);
+    const gol = raspunsuri(d).gol.map(x => x.prenume);
     wa(`Încă n-au răspuns pentru ${dZi(d)}: ${gol.join(', ')}.\nConfirmați aici, durează 2 secunde: ${S.linkGrup}`);
   }
-  else if (a === 'waLink') wa('Aici confirmați dacă veniți la grupul mic: ' + S.linkGrup);
   else if (a === 'copy') {
     const ok = () => toast('Link copiat ✓'), fb = () => prompt('Copiază linkul:', S.linkGrup);
     if (navigator.clipboard) navigator.clipboard.writeText(S.linkGrup).then(ok, fb); else fb();
@@ -533,16 +569,16 @@ function act(a, el){
     schimba('api_membru', ['adauga', { nume: nume.trim(), prenume: (pre || '').trim() }], null, 'Adăugat ✓');
   }
   else if (a === 'ren') { const v = prompt('Cum apare ' + m.nume + ' în listă:', m.prenume); if (v && v.trim()) schimba('api_membru', ['modifica', { id, camp: 'prenume', valoare: v.trim() }], () => { m.prenume = v.trim(); }); }
-  else if (a === 'gal') { const v = m.rol === 'galben' ? '' : 'galben'; schimba('api_membru', ['modifica', { id, camp: 'rol', valoare: v }], () => { m.rol = v; }); }
   else if (a === 'act') {
     if (m.activ && !confirm('Îl scoți pe ' + m.prenume + ' din grup?\nIstoricul lui rămâne.')) return;
     const v = !m.activ; schimba('api_membru', ['modifica', { id, camp: 'activ', valoare: v ? '1' : '0' }], () => { m.activ = v; });
   }
   else if (a === 'addDate') {
     const v = $('#dataNoua').value; if (!v) { toast('Alege întâi ziua'); return; }
-    schimba('api_intalnire', [v, 'adauga', ''], () => { S.intalniri.push({ data: v, tip: 'Normală', nota: '', prezenta_facuta: false }); S.intalniri.sort((x, y) => x.data < y.data ? -1 : 1); IC = IP = null; ziCurenta(); }, 'Adăugată ✓');
+    schimba('api_intalnire', [v, 'adauga', ''], () => { S.intalniri.push({ data: v, tip: 'Normală', nota: '', prezenta_facuta: false }); S.intalniri.sort((x, y) => x.data < y.data ? -1 : 1); }, 'Adăugată ✓');
   }
   else if (a === 'trec') { ARATA_TREC = !ARATA_TREC; render(); }
+  else if (a === 'tot') { ARATA_TOT = !ARATA_TOT; render(); }
   else if (a === 'jur') { ARATA_JUR = !ARATA_JUR; render(); }
 }
 function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
