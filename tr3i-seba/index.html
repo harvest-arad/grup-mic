@@ -136,7 +136,12 @@ if (Q.get('g')) { MEM.g = Q.get('g'); ls('G', MEM.g); }
 const KEY_L = MEM.k || ls('K') || '', KEY_G = MEM.g || ls('G') || '';
 // Linkul de grup deschis explicit câștigă (Seba își poate vedea pagina băieților); altfel, liderul.
 const MOD = Q.get('g') ? 'grup' : KEY_L ? 'lider' : KEY_G ? 'grup' : '';
-if (Q.get('k') || Q.get('g')) history.replaceState(null, '', location.pathname);   // cheia nu rămâne în bara de adrese
+/* Pe iPhone, aplicația de pe ecranul principal are altă memorie decât Safari (Asimilare, Vlad, 06.09.2026):
+   cheia ținută în Safari nu ajunge în ea. În Safari o lăsăm deci în adresă, ca „Adaugă pe ecranul principal”
+   s-o ia cu ea; dacă aplicația instalată tot pornește fără cheie, cere linkul lipit (cereLinkul). */
+const ESTE_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const ESTE_INSTALATA = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+if ((Q.get('k') || Q.get('g')) && !(ESTE_IOS && !ESTE_INSTALATA)) history.replaceState(null, '', location.pathname);   // cheia nu rămâne în bara de adrese
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -589,7 +594,22 @@ function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 /* ---------- pornire ---------- */
 if (MOD === 'lider') liderPorneste();
 else if (MOD === 'grup') grupPorneste();
-else $('#app').innerHTML = '<div class="card">Deschide aplicația din linkul primit pe WhatsApp.</div>';
+else cereLinkul();
+
+/** Fără cheie în memorie (de obicei: iPhone, aplicația de pe ecran). Linkul lipit o dată rămâne ținut minte. */
+function cereLinkul(){
+  $('#app').innerHTML = `<div class="card"><b>Lipește linkul primit</b>
+    <div class="note">${ESTE_INSTALATA ? 'Pe iPhone, aplicația de pe ecran nu vede ce ai deschis în Safari. ' : ''}Ține apăsat pe linkul din WhatsApp → Copiază, apoi lipește-l aici. O singură dată: telefonul îl ține minte.</div>
+    <div class="row" style="margin-top:10px"><input id="linkLipit" class="sp" placeholder="https://harvest-arad.github.io/…" autocomplete="off"><button class="b p" id="linkOk">Deschide</button></div>
+    <div class="note" id="linkErr"></div></div>`;
+  $('#linkOk').onclick = () => {
+    const t = ($('#linkLipit').value || '').trim(), m = t.match(/[?&]([kg])=([A-Za-z0-9]{10,})/);
+    if (!m) { $('#linkErr').textContent = 'Nu seamănă cu linkul primit. Copiază-l întreg din mesaj și lipește-l din nou.'; return; }
+    ls(m[1] === 'k' ? 'K' : 'G', m[2]);
+    if (ls(m[1] === 'k' ? 'K' : 'G') !== m[2]) { location.href = location.pathname + '?' + m[1] + '=' + m[2]; return; }   // fără stocare: măcar din adresă
+    location.replace(location.pathname);
+  };
+}
 </script>
 </body>
 </html>
