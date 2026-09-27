@@ -1,6 +1,6 @@
 // Păstrează fișierele aplicației pe telefon; datele vin mereu de la server (POST, nu trece pe aici).
 // Pagina: rețeaua are ultimul cuvânt, memoria e doar plasă fără semnal. Restul: memorie întâi, reîmprospătat în fundal.
-const CACHE = 'tr3i-seba-v1';
+const CACHE = 'tr3i-seba-v2';
 const FILES = ['./', 'index.html', 'logo-mark.svg', 'manifest.webmanifest',
                'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 const FONTURI = ['fonts.googleapis.com', 'fonts.gstatic.com'];
