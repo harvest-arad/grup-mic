@@ -154,6 +154,9 @@ function dScurt(s){ const p = s.split('-'); return p[2] + '.' + p[1]; }
 function zileIntre(a, b){ return Math.round((dObj(b) - dObj(a)) / 86400000); }
 function aziLocal(){ const d = new Date(), z = n => (n < 10 ? '0' : '') + n; return d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()); }
 function toast(t, ms){ const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = 'none', ms || 1800); }
+/** Întâlnirea e la biserică, dacă Seba n-a scris alt loc în notă. */
+const LOC_IMPLICIT = 'la biserică';
+function unde(it){ return (it && it.nota) || LOC_IMPLICIT; }
 function wa(text){ window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); }
 
 function call(fn, ...args){
@@ -187,7 +190,7 @@ function grupRender(){
   $('#who').textContent = eu && !ALEGE ? '· ' + eu.prenume : '';
   if (!it) { $('#app').innerHTML = '<div class="card">Nu e nicio întâlnire programată deocamdată.</div>'; return; }
   let h = `<div class="card"><div class="mut">Următoarea întâlnire</div><div class="when">${esc(dLung(it.data))}${it.data === GS.azi ? ' · azi' : ''}</div>
-    ${it.nota ? `<div class="note">${esc(it.nota)}</div>` : ''}${it.tip === 'Specială' ? '<div class="note">Întâlnire specială</div>' : ''}</div>`;
+    <div class="note">${esc(unde(it))}</div>${it.tip === 'Specială' ? '<div class="note">Întâlnire specială</div>' : ''}</div>`;
   if (!eu || ALEGE) {
     h += `<div class="card"><h3 style="margin:0">Cine ești?</h3><div class="note">Atinge-ți numele. Telefonul îl ține minte.</div>
       <div class="names">${GS.membri.map(m => `<button data-a="eu" data-id="${esc(m.id)}">${esc(m.prenume)}</button>`).join('')}</div></div>`;
@@ -352,7 +355,7 @@ function vVineri(){
   let h = `<div class="datebar"><button class="b" data-a="nav" data-x="-1" ${IDX > 0 ? '' : 'disabled'}>◀</button>
     <div class="d"><b>${esc(dLung(it.data))}</b><span class="mut">${relativ(it.data)}</span>
       ${it.tip === 'Anulată' ? ' <span class="badge nu">anulată</span>' : ''}
-      <div class="mut">${it.nota ? esc(it.nota) : ''} <a href="#" data-a="nota" data-d="${esc(it.data)}">${it.nota ? 'schimbă' : '+ unde / ce facem'}</a></div></div>
+      <div class="mut">${esc(unde(it))} · <a href="#" data-a="nota" data-d="${esc(it.data)}">schimbă</a></div></div>
     <button class="b" data-a="nav" data-x="1" ${IDX < L.length - 1 ? '' : 'disabled'}>▶</button></div>`;
   if (it.tip === 'Anulată') return h + `<div class="card">Nu se ține: nu se cer confirmări și nu intră în statistică.
     <div class="row" style="margin-top:8px"><button class="b" data-a="tip" data-d="${esc(it.data)}" data-t="Normală">Se ține totuși</button></div></div>`;
@@ -435,7 +438,7 @@ function vProgram(){
   if (urm) {
     const R = raspunsuri(urm.data);
     h += `<div class="card next" data-a="open" data-d="${esc(urm.data)}"><div class="mut">Următoarea întâlnire · ${relativ(urm.data)}</div>
-      <div class="big">${esc(dLung(urm.data))}</div><div>${urm.nota ? esc(urm.nota) : '<span class="mut">încă fără loc / temă</span>'}</div>
+      <div class="big">${esc(dLung(urm.data))}</div><div>${esc(unde(urm))}</div>
       <div class="note">${R.vin.length} vin · ${R.nu.length} nu pot · ${R.gol.length} n-au răspuns → deschide</div></div>`;
   }
   const lista = ARATA_TOT ? viit : viit.slice(0, 8);
@@ -548,12 +551,12 @@ function act(a, el){
     schimba('api_intalnire', [d, 'tip', t], () => { i.tip = t; }, t === 'Anulată' ? 'Anulată' : 'Se ține ✓');
   }
   else if (a === 'nota') {
-    const i = S.intalniri.find(z => z.data === d), t = prompt('Unde vă vedeți / ce faceți ' + dZi(d) + '? (apare și la băieți)', i.nota || '');
+    const i = S.intalniri.find(z => z.data === d), t = prompt('Unde vă vedeți ' + dZi(d) + '? Lasă gol dacă e la biserică. (apare și la băieți)', i.nota || '');
     if (t !== null) schimba('api_intalnire', [d, 'nota', t.trim()], () => { i.nota = t.trim(); }, 'Notă salvată');
   }
   else if (a === 'waInv') {
     const i = S.intalniri.find(z => z.data === d);
-    wa(`Salut! 👋 ${cap(dZi(d))} ne vedem la grupul mic${i.nota ? ' (' + i.nota + ')' : ''}.\nConfirmă aici dacă vii: ${S.linkGrup}`);
+    wa(`Salut! 👋 ${cap(dZi(d))} ne vedem la grupul mic, ${unde(i)}.\nConfirmă aici dacă vii: ${S.linkGrup}`);
   }
   else if (a === 'waRem') {
     const gol = raspunsuri(d).gol.map(x => x.prenume);
