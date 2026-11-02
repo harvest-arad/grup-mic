@@ -106,6 +106,13 @@ const LUNI = ['ian','feb','mar','apr','mai','iun','iul','aug','sep','oct','nov',
 function dObj(s){const p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
 function dLung(s){const d=dObj(s);return ZILE[d.getDay()]+', '+d.getDate()+' '+LUNI[d.getMonth()]+' '+d.getFullYear();}
 function dScurt(s){const p=s.split('-');return p[2]+'.'+p[1];}
+// nume afișat pentru gazdă: „Gherhes – la Miha” când familia are loc ales
+const gz = fam => { const f = S.familii.find(x => x.familie === fam); return fam ? fam + (f && f.loc ? ' – la ' + f.loc : '') : ''; };
+// selector Miha / Andrei, doar pentru familiile definite în LOCURI (Code.gs)
+function locSel(f){
+  const l = S.locuri && S.locuri[f.familie]; if (!l) return '';
+  return ` <select data-a="floc" data-f="${esc(f.familie)}" style="font-size:13px;padding:4px"><option value="">gazdă…</option>${l.map(x => `<option ${f.loc === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+}
 function toast(t,ms){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms||1800);}
 
 // Schimb de găzduire: familia aleasă ia săptămâna d, gazda veche ia cea mai apropiată săptămână viitoare a familiei alese.
@@ -192,7 +199,7 @@ function vPrez(){
     <button class="b" data-a="prev">◀</button>
     <div class="d"><b>${esc(dLung(it.data))}</b>
       <span class="badge t">${esc(it.tip)}</span>
-      ${it.gazda ? ` <span class="mut">gazdă: <b>${esc(it.gazda)}</b></span>` : ''}
+      ${it.gazda ? ` <span class="mut">gazdă: <b>${esc(gz(it.gazda))}</b></span>` : ''}
       ${it.data > azi() ? ' <span class="mut">· încă n-a avut loc</span>' : ''}
     </div>
     <button class="b" data-a="next">▶</button></div>`;
@@ -289,7 +296,7 @@ function vGazd(){
   const I = S.intalniri;
   let h = `<div class="card"><div class="row"><b class="sp">Rotația</b></div>
     <table><tr><th>Familie · bifă = găzduiește</th><th class="n">găzduit</th><th class="n">planificat</th></tr>
-    ${S.familii.map(f => `<tr><td><label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste !== '0' ? 'checked' : ''}>${esc(f.familie)}</label>${f.gazduieste === '0' ? ' <span class="mut">(în afara rotației)</span>' : ''}</td><td class="n">${S.gazduiri[f.familie].facute}</td><td class="n">${S.gazduiri[f.familie].planificate}</td></tr>`).join('')}</table></div>`;
+    ${S.familii.map(f => `<tr><td><label><input type="checkbox" data-a="fset" data-c="gazduieste" data-f="${esc(f.familie)}" ${f.gazduieste !== '0' ? 'checked' : ''}>${esc(f.familie)}</label>${f.gazduieste === '0' ? ' <span class="mut">(în afara rotației)</span>' : ''}${locSel(f)}</td><td class="n">${S.gazduiri[f.familie].facute}</td><td class="n">${S.gazduiri[f.familie].planificate}</td></tr>`).join('')}</table></div>`;
   const trecute = I.filter(i => i.data < S.azi);
   if (trecute.length) h += `<button class="b" style="width:100%;margin-bottom:10px" data-a="trecute">${ARATA_TRECUTE?'Ascunde':'Arată'} întâlnirile trecute (${trecute.length})</button>`;
   I.forEach(it => {
@@ -300,7 +307,7 @@ function vGazd(){
       <div class="row"><b>${esc(dLung(it.data))}</b><span class="sp"></span>
         <select data-a="settip" data-d="${esc(it.data)}">${S.tipuri.map(t => `<option ${t===it.tip?'selected':''}>${t}</option>`).join('')}</select></div>
       <div class="row" style="margin-top:8px">
-        <span class="host">${it.gazda ? esc(it.gazda) : (areG ? '—' : esc(it.tip === 'Liberă' ? 'Săptămână liberă' : it.tip === 'Întâlnirea bărbaților' ? 'Întâlnirea bărbaților' : it.tip))}</span>
+        <span class="host">${it.gazda ? esc(gz(it.gazda)) : (areG ? '—' : esc(it.tip === 'Liberă' ? 'Săptămână liberă' : it.tip === 'Întâlnirea bărbaților' ? 'Întâlnirea bărbaților' : it.tip))}</span>
         ${it.stare ? `<span class="badge ${esc(it.stare)}">${it.stare==='Propus'?'propus':'confirmat'}</span>` : ''}
       </div>
       ${it.tip === 'Întâlnirea bărbaților' ? `<div class="row" style="margin-top:8px;gap:6px">
@@ -406,13 +413,14 @@ function act(a, el){
   else if (a === 'wagrup') {
     const urm = S.intalniri.filter(i => i.data >= S.azi).slice(0, 8);
     const txt = 'Programul de găzduire la grupul mic:\n' + urm.map(i => '• ' + dScurt(i.data) + ' – ' +
-      (i.tip === 'Normală' ? (i.gazda || '?') + (i.stare === 'Propus' ? ' (de confirmat)' : '') : i.tip + (i.gazda ? ' (' + i.gazda + ')' : ''))).join('\n') +
+      (i.tip === 'Normală' ? gz(i.gazda || '?') + (i.stare === 'Propus' ? ' (de confirmat)' : '') : i.tip + (i.gazda ? ' (' + gz(i.gazda) + ')' : ''))).join('\n') +
       '\nDacă nu puteți când vă vine rândul, spuneți-ne din timp și facem schimb cu următoarea familie.';
     waDeschide('', txt);
   }
   else if (a === 'trecute') { ARATA_TRECUTE = !ARATA_TRECUTE; render(); }
   else if (a === 'plus') { el.disabled = true; el.textContent = 'Se adaugă…'; gazduire('api_prelungeste', [4], null, '+4 săptămâni'); }
   else if (a === 'up' || a === 'dn') { call('api_ordine', el.dataset.f, a === 'up' ? -1 : 1).then(st => { aplica(st); toast('Ordine salvată'); }); }
+  else if (a === 'floc') { const f = S.familii.find(x => x.familie === el.dataset.f), v = el.value; gazduire('api_familie', [el.dataset.f, 'loc', v], () => { f.loc = v; }, 'Salvat ✓'); }
   else if (a === 'fset') { if (el.dataset.c === 'gazduieste' && !confirm(el.dataset.f + (el.checked ? ' intră în rotație.' : ' iese din rotație.') + '\nGazdele propuse se recalculează; cele confirmate rămân.')) { el.checked = !el.checked; return; } const f = S.familii.find(x => x.familie === el.dataset.f), c = el.dataset.c, v = el.checked; gazduire('api_familie', [el.dataset.f, c, v], () => { f[c] = v ? '1' : '0'; }, 'Salvat ✓'); }
   else if (a === 'tel') { call('api_telefon', el.dataset.f, el.value).then(() => { const f = S.familii.find(x => x.familie === el.dataset.f); f.telefon = el.value; toast('Telefon salvat'); }); }
 }
